@@ -4,6 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
+        "build": "tsc --noEmit",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix"
     },
@@ -27,6 +28,7 @@
         "eslint": "^10.7.0",
         "eslint-plugin-playwright": "^2.10.5",
         "globals": "^17.7.0",
+        "typescript": "^6.0.3",
         "typescript-eslint": "^8.63.0"
     }
 }
