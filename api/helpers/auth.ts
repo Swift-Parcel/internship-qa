@@ -22,7 +22,11 @@ export async function getBearerToken(
     const { authUrl, credentials, tokenPath = "token" } = options;
 
     const response = await request.post(authUrl, {
-        data: credentials,
+        data: {
+            username: credentials.username, // I changed that part
+            email: credentials.username, 
+            password: credentials.password,
+        },
     });
 
     if (!response.ok()) {
