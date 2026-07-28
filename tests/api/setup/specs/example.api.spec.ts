@@ -8,10 +8,9 @@ test.describe("API example tests", () => {
         const response = await api.get(`${apiBaseUrl}customer/3`);
 
         expect(response.ok()).toBeTruthy();
-        
     });
 
-  /*  test("creates a resource using authenticated POST", async ({
+    /*  test("creates a resource using authenticated POST", async ({
         api,
         apiBaseUrl,
     }) => {
