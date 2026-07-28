@@ -46,7 +46,8 @@ export const test = base.extend<ApiFixtures, ApiWorkerFixtures>({
             const bearerToken = await getBearerToken(requestContext, {
                 authUrl: apiAuthUrl,
                 credentials: {
-                    username: apiUsername,
+                    //username: apiUsername,
+                    email: apiUsername,
                     password: apiPassword,
                 },
                 tokenPath,

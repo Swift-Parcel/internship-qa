@@ -1,7 +1,8 @@
 import { APIRequestContext } from "@playwright/test";
 
 export interface AuthCredentials {
-    username: string;
+    //username: string;
+    email: string;
     password: string;
 }
 
@@ -32,9 +33,19 @@ export async function getBearerToken(
     });
     //post a request to get response with data as payload
     if (!response.ok()) {
+         console.log(authUrl);
+        console.log(credentials);
+        console.log("Status:", response.status());
+        console.log("Body:", await response.text());
         throw new Error(
             `Authentication failed. Status: ${response.status()} ${response.statusText()}`,
         );
+        console.log({
+  authUrl: process.env.API_AUTH_URL,
+  username: process.env.API_USERNAME,
+  password: process.env.API_PASSWORD,
+});
+
     }
 
     const payload = (await response.json()) as Record<string, unknown>;

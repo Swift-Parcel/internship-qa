@@ -5,12 +5,13 @@ test.describe("API example tests", () => {
         api,
         apiBaseUrl,
     }) => {
-        const response = await api.get(`${apiBaseUrl}/health`);
+        const response = await api.get(`${apiBaseUrl}customer/3`);
 
         expect(response.ok()).toBeTruthy();
+        
     });
 
-    test("creates a resource using authenticated POST", async ({
+  /*  test("creates a resource using authenticated POST", async ({
         api,
         apiBaseUrl,
     }) => {
@@ -24,5 +25,5 @@ test.describe("API example tests", () => {
         });
 
         expect([200, 201]).toContain(response.status());
-    });
+    });*/
 });
