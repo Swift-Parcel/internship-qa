@@ -1,7 +1,8 @@
 import { APIRequestContext } from "@playwright/test";
 
 export interface AuthCredentials {
-    username: string;
+    //username: string;
+    email: string;
     password: string;
 }
 
@@ -20,19 +21,31 @@ export async function getBearerToken(
     options: AuthOptions,
 ): Promise<string> {
     const { authUrl, credentials, tokenPath = "token" } = options;
+    /* similar to below 
+    const authUrl = options.authUrl;
+    const credentials = options.credentials;
+    const tokenPath = options.tokenPath;
+    for tokenpath = "token" is same as options.token if empty default token
+    */
 
     const response = await request.post(authUrl, {
-        data: {
-            username: credentials.username, // I changed that part
-            email: credentials.username, 
-            password: credentials.password,
-        },
+        data: credentials,
     });
-
+    //post a request to get response with data as payload
     if (!response.ok()) {
+         console.log(authUrl);
+        console.log(credentials);
+        console.log("Status:", response.status());
+        console.log("Body:", await response.text());
         throw new Error(
             `Authentication failed. Status: ${response.status()} ${response.statusText()}`,
         );
+        console.log({
+  authUrl: process.env.API_AUTH_URL,
+  username: process.env.API_USERNAME,
+  password: process.env.API_PASSWORD,
+});
+
     }
 
     const payload = (await response.json()) as Record<string, unknown>;
@@ -46,6 +59,7 @@ export async function getBearerToken(
 
     return token;
 }
+//const token = await getBearerToken(...); to call the function to get token
 
 function getValueByPath(
     source: Record<string, unknown>,
@@ -59,3 +73,6 @@ function getValueByPath(
         return (accumulator as Record<string, unknown>)[segment];
     }, source);
 }
+
+//above is a function to use to get value from an object like data.address.number in a json
+//accumulator iterates down the json untill it gets the value down the path 
