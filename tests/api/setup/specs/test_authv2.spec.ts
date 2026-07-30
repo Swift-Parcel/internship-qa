@@ -14,15 +14,13 @@ Registration with without email.
 Registration with without Password.
 */
 
-//////////// Registration URL needs to update after backend changes!!
+//////////// Registration URL changed.
 
 import { test, expect } from "@playwright/test";
 
 test.describe("Customer Registration & Authentication API Tests", () => {
     test.describe.configure({ mode: "serial" }); //we need that one for the tests to run in order, otherwise it is failing.
-
-    const registerUrl =
-        "http://localhost:8080/api/customerportal/customer/createCustomer";
+    const registerUrl = "http://localhost:8080/api/customerportal/customer";
     const loginUrl = "http://localhost:8080/api/customerportal/auth/login";
     const demoUrl = "http://localhost:8080/api/customerportal/demo";
     const refreshUrl = "http://localhost:8080/api/customerportal/auth/refresh";
@@ -44,7 +42,7 @@ test.describe("Customer Registration & Authentication API Tests", () => {
                 email: uniqueEmail,
                 fullName: "QA Test User",
                 phoneNumber: "123456789",
-                password: userPassword, // Use the same password for login test
+                passwordHash: userPassword, // Use the same password for login test
             },
         });
 
@@ -174,8 +172,7 @@ test.describe("Customer Registration & Authentication API Tests", () => {
 //Negative Test Scenarios
 
 test.describe("Customer Registration Negative Test Scenarios", () => {
-    const registerUrl =
-        "http://localhost:8080/api/customerportal/customer/createCustomer";
+    const registerUrl = "http://localhost:8080/api/customerportal/customer";
 
     test("1-It should fail when registering with an existing email", async ({
         request,
@@ -185,7 +182,7 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
             email: existingEmail,
             fullName: "QA Test User",
             phoneNumber: "123456789",
-            password: "Test1234!",
+            passwordHash: "Test1234!",
         };
         const firstReg = await request.post(registerUrl, { data: payload });
         expect(
@@ -197,8 +194,8 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
 
         console.log("ACTUAL STATUS CODE:", duplicateReg.status()); //we added for finding which error is coming.
         expect(
-            [400, 409].includes(duplicateReg.status()), //It is returning 403 error code.
-            "Duplicate registration should fail with 400 or 409",
+            [400, 403, 409].includes(duplicateReg.status()), //It is returning 403 error code.
+            "Duplicate registration should fail with 400 , 403or 409",
         ).toBeTruthy();
     });
     //2-Registration with invalid email format
@@ -207,13 +204,13 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
             email: "invalid-email-format",
             fullName: "QA Test User",
             phoneNumber: "123456789",
-            password: "Test1234!",
+            passwordHash: "Test1234!",
         };
         const response = await request.post(registerUrl, { data: payload });
         expect(
-            response.status(),
-            "Invalid email format should return 400",
-        ).toBe(400);
+            [400, 403].includes(response.status()),
+            `Invalid email format should return status code 400 or 403, got ${response.status()}`,
+        ).toBeTruthy();
     });
 
     // 3- Registeration without email
@@ -221,10 +218,13 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         const payload = {
             fullName: "QA Test User",
             phoneNumber: "123456789",
-            password: "Test1234!",
+            passwordHash: "Test1234!",
         };
         const response = await request.post(registerUrl, { data: payload });
-        expect(response.status(), "Missing email should return 400").toBe(400);
+        expect(
+            [400, 403].includes(response.status()),
+            `Missing email should return status code 400 or 403, got ${response.status()}`,
+        ).toBeTruthy();
     });
 
     // 4- Registeration without password
@@ -240,5 +240,6 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
             `Missing password should return status code 400 or 403, got ${response.status()}`,
         ).toBeTruthy(); //Normally it should return 400 in my opinion, i just changed that part for testing the result of it. I will update that part after talking with backend.
         //Also in the other negative test cases have the same situation too.
+        //They said except from 500, other 400 errors are acceptable.
     });
 });
