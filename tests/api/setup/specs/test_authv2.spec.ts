@@ -240,6 +240,6 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
             `Missing password should return status code 400 or 403, got ${response.status()}`,
         ).toBeTruthy(); //Normally it should return 400 in my opinion, i just changed that part for testing the result of it. I will update that part after talking with backend.
         //Also in the other negative test cases have the same situation too.
-        //They said except from 500, other 400 errors are acceptable.
+        //For now it is returning 500, I gave information.
     });
 });
