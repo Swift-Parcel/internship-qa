@@ -1,21 +1,3 @@
-/*This test includes the following scenarios:
-1. Successful registration with valid data and login the user.
-2. Login test with existing email and valid password.
-3.Protected endpoint test.
-4. Token refresh test.
-5. Logout test.
-*/
-
-/*Negative Test Scenarios:
-Successful registration with valid data and login the user.
-Registration with existing email.
-Registration with invalid email format.
-Registration with without email.
-Registration with without Password.
-*/
-
-//////////// Registration URL changed.
-
 import { test, expect } from "@playwright/test";
 
 test.describe("Customer Registration & Authentication API Tests", () => {
@@ -238,8 +220,6 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         expect(
             [400, 403].includes(response.status()),
             `Missing password should return status code 400 or 403, got ${response.status()}`,
-        ).toBeTruthy(); //Normally it should return 400 in my opinion, i just changed that part for testing the result of it. I will update that part after talking with backend.
-        //Also in the other negative test cases have the same situation too.
-        //For now it is returning 500, I gave information.
+        ).toBeTruthy();
     });
 });
