@@ -1,4 +1,4 @@
-import { test, expect } from "../setup";
+import { test, expect } from "../setup/setup";
 
 test.describe("test profile retrieval", () => {
     test("gets user profile response json structure", async ({

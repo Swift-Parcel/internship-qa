@@ -41,7 +41,7 @@ export default defineConfig({
     projects: [
         {
             name: "api",
-            testDir: "./tests/api/setup/specs",
+            testDir: "./tests/api/specs",
         },
 
         {

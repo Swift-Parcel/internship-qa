@@ -1,4 +1,4 @@
-import { expect, test } from "../setup";
+import { expect, test } from "../setup/setup";
 
 test.describe("API example tests", () => {
     test("gets protected resource using bearer token auth", async ({
