@@ -1,40 +1,30 @@
 import { test, expect } from "../setup";
 
-/* already done in the test object used from setup that extends playwrights test
-test.beforeAll('get token',async()=>{
-    const token = getBearerToken();
-})
-*/
-
-/*
-//if there is a URL path where can retrieve users
-test("get users", async({api, apiBaseUrl}) =>{
-    const response = await api.get('${apiBaseUrl}/users')
-    expect(response.ok()).toBeTruthy()
-    console.log(response)
-})*/
-
-//test retrieval of profile
 test.describe("test profile retrieval", () => {
-    test("gets user profile using bearer token auth", async ({
+    test("gets user profile response json structure", async ({
         api,
         apiBaseUrl,
     }) => {
-        const response = await api.get(`${apiBaseUrl}customer/3`);
+        const response = await api.get(`${apiBaseUrl}customer/4`);
         const body = await response.json();
 
-        expect(typeof body.ful);
-        expect(response.ok()).toBeTruthy();
+        expect(body).toMatchObject({
+            id: expect.any(Number),
+            email: expect.any(String),
+            full_name: expect.any(String),
+            phone_number: expect.any(String),
+            preferred_language: expect.any(String),
+            default_address: {
+                id: expect.any(Number),
+                city: expect.any(String),
+                postal_code: expect.any(String),
+                country_code: expect.any(String),
+                street: expect.anything(),
+                street_number: expect.anything(),
+            },
+        });
         expect(response.status()).toBe(200);
-        expect(typeof body.full_name).toBe("string");
-        expect(body.full_name.length).toBeGreaterThan(0); //name should not be null
-        expect(body.email.length).toBeGreaterThan(0);
     });
-    /*
-    test('update profile', async({api, apiBaseUrl})=>{
-        const response = await api.patch('${apiBaseUrl/customer/3')
-
-    })*/
 
     test("test retrieval with incorrect customerID", async ({
         api,
@@ -42,22 +32,31 @@ test.describe("test profile retrieval", () => {
     }) => {
         const response = await api.get(`${apiBaseUrl}customer/1587`);
 
-        expect(response.status()).toBe(404); //not found
+        expect(response.status()).toBe(404);
     });
-    test("test retrieval with empty customer ID or special character", async ({
+    test("test retrieval with special character", async ({
         api,
         apiBaseUrl,
     }) => {
         const response = await api.get(`${apiBaseUrl}customer/*`);
 
-        expect(response.status()).toBe(403); //forbiden should be bad request
+        expect(response.status()).toBe(400); //forbiden should be bad request
+    });
+
+    test("test retrieval with empty customer ID", async ({
+        api,
+        apiBaseUrl,
+    }) => {
+        const response = await api.get(`${apiBaseUrl}customer/`);
+
+        expect(response.status()).toBe(400); //forbiden should be bad request
     });
 
     test("test retrieval of profile without authentication", async ({
         api,
         apiBaseUrl,
     }) => {
-        const response = await api.get(`${apiBaseUrl}customer/3`, {
+        const response = await api.get(`${apiBaseUrl}customer/4`, {
             headers: {
                 Authorization: "",
             },
@@ -70,7 +69,7 @@ test.describe("test profile update", () => {
     test("updated an existing profile", async ({ api, apiBaseUrl }) => {
         const updateData = { full_name: "ron turyatemba tron" };
 
-        const response = await api.patch(`${apiBaseUrl}customer/3`, {
+        const response = await api.patch(`${apiBaseUrl}customer/4`, {
             data: updateData,
         });
         const data = await response.json();
@@ -87,6 +86,6 @@ test.describe("test profile update", () => {
         const response = await api.patch(`${apiBaseUrl}customer/3`, {
             data: invalidData,
         });
-        expect(response.status()).toBe(403); //should reduce bad request
+        expect(response.status()).toBe(403); //should return bad request
     });
 });
