@@ -20,11 +20,17 @@ export async function getBearerToken(
     options: AuthOptions,
 ): Promise<string> {
     const { authUrl, credentials, tokenPath = "token" } = options;
+    /* similar to below 
+    const authUrl = options.authUrl;
+    const credentials = options.credentials;
+    const tokenPath = options.tokenPath;
+    for tokenpath = "token" is same as options.token if empty default token
+    */
 
     const response = await request.post(authUrl, {
         data: credentials,
     });
-
+    //post a request to get response with data as payload
     if (!response.ok()) {
         throw new Error(
             `Authentication failed. Status: ${response.status()} ${response.statusText()}`,
@@ -55,3 +61,6 @@ function getValueByPath(
         return (accumulator as Record<string, unknown>)[segment];
     }, source);
 }
+
+//above is a function to use to get value from an object like data.address.number in a json
+//accumulator iterates down the json untill it gets the value down the path
