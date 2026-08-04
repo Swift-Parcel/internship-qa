@@ -33,9 +33,6 @@ test.beforeEach(async () => {
     };
 });
 
-/* reset customer pickup requests to 0 after each test 
-test.afterEach(async ({ api, apiBaseUrl }) => {});*/
-
 test.describe("test request pickup suite", () => {
     test("test Pickup Creation, Full Payload With Valid data", async ({
         api,
@@ -60,14 +57,14 @@ test.describe("test request pickup suite", () => {
     });
 
     test("test  submissions on past dates", async ({ api, apiBaseUrl }) => {
-        validRequest.preferredPickupDate = "2026-07-02 "; //past date
+        validRequest.preferredPickupDate = "2026-07-02 ";
         const response = await api.post(
             `${apiBaseUrl}customer/${customerId}/pickup-requests`,
             {
                 data: validRequest,
             },
         );
-        expect(response.status()).toBe(201); //bad request
+        expect(response.status()).toBe(400);
         expect(await response.text()).toBe("pickup date must be in the future");
     });
 
@@ -79,8 +76,9 @@ test.describe("test request pickup suite", () => {
                 data: validRequest,
             },
         );
+        const responseBody = await response.json();
         expect(response.status()).toBe(400);
-        expect(await response.text()).toContain(
+        expect(responseBody.message).toContain(
             "recipientName: Recipient name is required",
         );
     });
@@ -93,9 +91,9 @@ test.describe("test request pickup suite", () => {
                 data: validRequest,
             },
         );
+        const responseBody = await response.json();
         expect(response.status()).toBe(400);
-        expect(await response.text()).toBe("invalid data");
-        //expect to see message about incorrect date
+        expect(responseBody.message).toBe("invalid data");
     });
 
     test("test same-day service restrictions cross-Country", async ({
@@ -111,7 +109,7 @@ test.describe("test request pickup suite", () => {
                 data: validRequest,
             },
         );
-        expect(response.status()).toBe(201);
+        expect(response.status()).toBe(400);
         expect(await response.text()).toBe(
             "Same-Day service is not available for cross-country routes",
         );
@@ -133,11 +131,12 @@ test.describe("test request pickup suite", () => {
         if (new Date().getHours() < 10) {
             expect(response.status()).toBe(201);
             expect(response.text(), "ordered same day before 10am").toBe(
-                "same day",
-            ); //cross-country address
+                "Pickup Request created",
+            );
         } else {
-            expect(response.status()).toBe(201);
-            expect(await response.text()).toBe(
+            const bodyResponse = await response.json();
+            expect(response.status()).toBe(400);
+            expect(bodyResponse.message).toBe(
                 "Same-Day service must be requested before 10:00 AM on the same day",
             );
         }
@@ -169,7 +168,7 @@ test.describe("test request pickup suite", () => {
                     expect(
                         reponse.status(),
                         "selected time slot is invalid for express",
-                    ).toBe(201);
+                    ).toBe(400);
                     expect(await reponse.text()).toBe(
                         "Express service must be requested at least 2 hours before the time slot starts",
                     );
@@ -201,7 +200,7 @@ test.describe("test request pickup suite", () => {
         }
     });
 
-    test("test physical and value constraints", async ({ api, apiBaseUrl }) => {
+    test("test weight constraints", async ({ api, apiBaseUrl }) => {
         validRequest.parcelWeight = 31;
 
         const response = await api.post(
@@ -210,12 +209,29 @@ test.describe("test request pickup suite", () => {
                 data: validRequest,
             },
         );
-        expect(response.status()).toBe(201);
-        expect(await response.text()).toBe(
+        expect(response.status()).toBe(400);
+        const responseBody = await response.json();
+        expect(responseBody.message).toBe(
             "parcelWeight: Maximum parcel weight: 30kg.",
         );
     });
-    //last test that exhausts the limit of unconfirmed pickup
+
+    test("test declared value constraints", async ({ api, apiBaseUrl }) => {
+        validRequest.declaredValue = 5001;
+
+        const response = await api.post(
+            `${apiBaseUrl}customer/${customerId}/pickup-requests`,
+            {
+                data: validRequest,
+            },
+        );
+        expect(response.status()).toBe(400);
+        const responseBody = await response.json();
+        expect(responseBody.message).toBe(
+            "declaredValue: Declared value cannot exceed €5,000.",
+        );
+    });
+
     test("test unconfirmed pickup request limit", async ({
         api,
         apiBaseUrl,
@@ -235,8 +251,9 @@ test.describe("test request pickup suite", () => {
                 data: validRequest,
             },
         );
-        expect(response.status()).toBe(201);
-        expect(await response.text()).toBe(
+        expect(response.status()).toBe(400);
+        const responseBody = await response.json();
+        expect(responseBody.message).toBe(
             "Customer cannot have more than 5 unconfirmed pickup requests",
         );
     });
