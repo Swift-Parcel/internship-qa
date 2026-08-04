@@ -49,6 +49,7 @@ export async function getBearerToken(
 
     return token;
 }
+//const token = await getBearerToken(...); to call the function to get token
 
 function getValueByPath(
     source: Record<string, unknown>,
