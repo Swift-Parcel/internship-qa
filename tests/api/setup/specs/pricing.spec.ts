@@ -1,29 +1,58 @@
 import { register } from "node:module";
 import { expect, test } from "../setup";
+import { APIResponse } from "@playwright/test";
+
+type PriceCalcDetails = {
+    service_type: number;
+    weight: number;
+    length: number;
+    width: number;
+    height: number;
+    sender_address: {
+        city: string;
+        postalCode: string;
+        countryCode: string;
+    };
+    recipient_address: {
+        city: string;
+        postalCode: string;
+        countryCode: string;
+    };
+};
+
+let calcDetails: PriceCalcDetails;
+test.beforeEach(async () => {
+    calcDetails = {
+        service_type: 0,
+        weight: 10.01,
+        length: 1,
+        width: 1,
+        height: 1,
+        sender_address: {
+            city: "Budapest",
+            postalCode: "1111",
+            countryCode: "HU",
+        },
+        recipient_address: {
+            city: "Budapest",
+            postalCode: "1111",
+            countryCode: "HU",
+        },
+    };
+});
 
 test.describe("Pricing tests - smoke", { tag: "@smoke" }, () => {
     test("Price calculation with standard same country service and surcharge", async ({
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.recipient_address = {
+            city: "Szeged",
+            postalCode: "6700",
+            countryCode: "HU",
+        };
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 0,
-                weight: 10.01,
-                length: 1,
-                width: 1,
-                height: 1,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Szeged",
-                    postalCode: "6700",
-                    countryCode: "HU",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -50,24 +79,19 @@ test.describe("Pricing tests - smoke", { tag: "@smoke" }, () => {
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.weight = 30;
+        calcDetails.length = 120;
+        calcDetails.width = 120;
+        calcDetails.height = 120;
+        calcDetails.service_type = 1;
+        calcDetails.recipient_address = {
+            city: "Bratislava",
+            postalCode: "82100",
+            countryCode: "SK",
+        };
+
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 1,
-                weight: 30,
-                length: 120,
-                width: 120,
-                height: 120,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Bratislava",
-                    postalCode: "82100",
-                    countryCode: "SK",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -94,24 +118,11 @@ test.describe("Pricing tests - smoke", { tag: "@smoke" }, () => {
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.service_type = 2;
+        calcDetails.weight = 5.01;
+
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 2,
-                weight: 5.01,
-                length: 120,
-                width: 1,
-                height: 120,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -138,24 +149,16 @@ test.describe("Pricing tests - smoke", { tag: "@smoke" }, () => {
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.service_type = 2;
+        calcDetails.weight = 5;
+        calcDetails.recipient_address = {
+            city: "Szeged",
+            postalCode: "6700",
+            countryCode: "HU",
+        };
+
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 2,
-                weight: 5,
-                length: 120,
-                width: 120,
-                height: 1,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Szeged",
-                    postalCode: "6700",
-                    countryCode: "HU",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -184,24 +187,15 @@ test.describe("Pricing tests - positive", () => {
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.weight = 0.01;
+        calcDetails.recipient_address = {
+            city: "Bratislava",
+            postalCode: "82100",
+            countryCode: "SK",
+        };
+
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 0,
-                weight: 0.01,
-                length: 1,
-                width: 120,
-                height: 120,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Bratislava",
-                    postalCode: "82100",
-                    countryCode: "SK",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -228,24 +222,11 @@ test.describe("Pricing tests - positive", () => {
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.service_type = 1;
+        calcDetails.weight = 10;
+
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 1,
-                weight: 10,
-                length: 1,
-                width: 120,
-                height: 1,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -437,24 +418,13 @@ test.describe("Pricing tests - negative", () => {
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.weight = 0;
+        calcDetails.length = 0;
+        calcDetails.width = 0;
+        calcDetails.height = 0;
+
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 2,
-                weight: -2,
-                length: 0.99,
-                width: 0.99,
-                height: 0.99,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Szeged",
-                    postalCode: "6700",
-                    countryCode: "HU",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -477,24 +447,13 @@ test.describe("Pricing tests - negative", () => {
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.weight = 30.01;
+        calcDetails.length = 121;
+        calcDetails.width = 121;
+        calcDetails.height = 121;
+
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 2,
-                weight: 30.01,
-                length: 121,
-                width: 121,
-                height: 121,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Szeged",
-                    postalCode: "6700",
-                    countryCode: "HU",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -517,24 +476,15 @@ test.describe("Pricing tests - negative", () => {
         api,
         apiBaseUrl,
     }) => {
+        calcDetails.service_type = 2;
+        calcDetails.recipient_address = {
+            city: "Bratislava",
+            postalCode: "82100",
+            countryCode: "SK",
+        };
+
         const response = await api.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 2,
-                weight: 30,
-                length: 120,
-                width: 120,
-                height: 120,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Bratislava",
-                    postalCode: "82100",
-                    countryCode: "SK",
-                },
-            },
+            data: calcDetails,
         });
 
         const responseBody = await response.json();
@@ -551,28 +501,19 @@ test.describe("Pricing tests - security", () => {
         request,
     }) => {
         const response = await request.post(`${apiBaseUrl}pricing`, {
-            data: {
-                service_type: 2,
-                weight: 5.01,
-                length: 120,
-                width: 1,
-                height: 120,
-                sender_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-                recipient_address: {
-                    city: "Budapest",
-                    postalCode: "1111",
-                    countryCode: "HU",
-                },
-            },
+            data: calcDetails,
         });
-        const responseBody = await response.json();
+
+        let message: string;
+        try {
+            const responseBody = await response.json();
+            message = responseBody.message;
+        } catch (e) {
+            message = "";
+        }
         expect.soft(response.status(), "Status code 401").toBe(401);
         expect
-            .soft(responseBody.message, "Error message for unauthorized user")
+            .soft(message, "Error message for unauthorized user")
             .toBe("Unauthorized user");
     });
 });
