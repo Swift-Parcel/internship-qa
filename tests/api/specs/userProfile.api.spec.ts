@@ -40,7 +40,9 @@ test.describe("test profile retrieval", () => {
     }) => {
         const response = await api.get(`${apiBaseUrl}customer/1587`);
 
+        const bodyResponse = await response.json();
         expect(response.status()).toBe(404);
+        expect(bodyResponse.message).toBe("Customer not found");
     });
     test("test retrieval with special character", async ({
         api,
@@ -94,6 +96,19 @@ test.describe("test profile update", () => {
         apiBaseUrl,
     }) => {
         const invalidData = { email: "12344" };
+        const response = await api.patch(`${apiBaseUrl}customer/4`, {
+            data: invalidData,
+        });
+        const bodyResponse = await response.json();
+        expect(response.status()).toBe(400);
+        expect(bodyResponse.message).toBe("Invalid data provided");
+    });
+
+    test("update profile with a field that doesn't exist", async ({
+        api,
+        apiBaseUrl,
+    }) => {
+        const invalidData = { hobbies: "football" };
         const response = await api.patch(`${apiBaseUrl}customer/4`, {
             data: invalidData,
         });
