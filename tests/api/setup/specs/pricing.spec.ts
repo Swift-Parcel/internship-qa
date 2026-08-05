@@ -20,6 +20,30 @@ type PriceCalcDetails = {
     };
 };
 
+function statusCodeCheck(actualStatusCode: number, expectedStatusCode: number) {
+    expect
+        .soft(actualStatusCode, `Status Code ${expectedStatusCode}`)
+        .toBe(expectedStatusCode);
+}
+
+function errorExpectsEqual(
+    expectTitle: string,
+    expectedErrorMessage: string,
+    actualErrorMessage: string,
+) {
+    expect.soft(actualErrorMessage, expectTitle).toBe(expectedErrorMessage);
+}
+
+function errorExpectsContain(
+    expectTitle: string,
+    expectedErrorMessage: string,
+    actualErrorMessage: string,
+) {
+    expect
+        .soft(actualErrorMessage, expectTitle)
+        .toContain(expectedErrorMessage);
+}
+
 let calcDetails: PriceCalcDetails;
 test.beforeEach(async () => {
     calcDetails = {
@@ -57,7 +81,7 @@ test.describe("Pricing tests - smoke", { tag: "@smoke" }, () => {
 
         const responseBody = await response.json();
 
-        expect.soft(response.status(), "Status code 200").toBe(200);
+        statusCodeCheck(response.status(), 200);
 
         expect.soft(responseBody.base_price, "Base price is correct").toBe(5);
         expect
@@ -96,7 +120,7 @@ test.describe("Pricing tests - smoke", { tag: "@smoke" }, () => {
 
         const responseBody = await response.json();
 
-        expect.soft(response.status(), "Status code 200").toBe(200);
+        statusCodeCheck(response.status(), 200);
 
         expect.soft(responseBody.base_price, "Base price is correct").toBe(12);
         expect
@@ -127,7 +151,7 @@ test.describe("Pricing tests - smoke", { tag: "@smoke" }, () => {
 
         const responseBody = await response.json();
 
-        expect.soft(response.status(), "Status code 200").toBe(200);
+        statusCodeCheck(response.status(), 200);
 
         expect.soft(responseBody.base_price, "Base price is correct").toBe(25);
         expect
@@ -163,7 +187,7 @@ test.describe("Pricing tests - smoke", { tag: "@smoke" }, () => {
 
         const responseBody = await response.json();
 
-        expect.soft(response.status(), "Status code 200").toBe(200);
+        statusCodeCheck(response.status(), 200);
 
         expect.soft(responseBody.base_price, "Base price is correct").toBe(25);
         expect
@@ -200,7 +224,7 @@ test.describe("Pricing tests - positive", () => {
 
         const responseBody = await response.json();
 
-        expect.soft(response.status(), "Status code 200").toBe(200);
+        statusCodeCheck(response.status(), 200);
 
         expect.soft(responseBody.base_price, "Base price is correct").toBe(5);
         expect
@@ -231,7 +255,7 @@ test.describe("Pricing tests - positive", () => {
 
         const responseBody = await response.json();
 
-        expect.soft(response.status(), "Status code 200").toBe(200);
+        statusCodeCheck(response.status(), 200);
 
         expect.soft(responseBody.base_price, "Base price is correct").toBe(12);
         expect
@@ -276,13 +300,12 @@ test.describe("Pricing tests - negative", () => {
         });
 
         const responseBody = await response.json();
-        expect.soft(response.status(), "Status code 400").toBe(400);
-        expect
-            .soft(
-                responseBody.message,
-                "Error message about incorrect data type",
-            )
-            .toBe("weight: Has to be a number");
+        statusCodeCheck(response.status(), 400);
+        errorExpectsEqual(
+            "Error message about incorrect data type",
+            "weight: Has to be a number",
+            responseBody.message,
+        );
     });
 
     test("Price calculation with missing ServiceType", async ({
@@ -309,10 +332,12 @@ test.describe("Pricing tests - negative", () => {
         });
 
         const responseBody = await response.json();
-        expect.soft(response.status(), "Status code 400").toBe(400);
-        expect
-            .soft(responseBody.message, "Error message is correct")
-            .toBe("service_type: Service type is required");
+        statusCodeCheck(response.status(), 400);
+        errorExpectsEqual(
+            "Error message is correct",
+            "service_type: Service type is required",
+            responseBody.message,
+        );
     });
 
     test("Price calculation with missing weight and dimensions", async ({
@@ -336,19 +361,27 @@ test.describe("Pricing tests - negative", () => {
         });
 
         const responseBody = await response.json();
-        expect.soft(response.status(), "Status code 400").toBe(400);
-        expect
-            .soft(responseBody.message, "Error message contains weight")
-            .toContain("weight: must not be null");
-        expect
-            .soft(responseBody.message, "Error message contains length")
-            .toContain("length: Minimum single dimension: 1cm");
-        expect
-            .soft(responseBody.message, "Error message contains width")
-            .toContain("width: Minimum single dimension: 1cm");
-        expect
-            .soft(responseBody.message, "Error message contains height")
-            .toContain("height: Minimum single dimension: 1cm");
+        statusCodeCheck(response.status(), 400);
+        errorExpectsContain(
+            "Error message contains weight",
+            "weight: must not be null",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains length",
+            "length: Minimum single dimension: 1cm",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains width",
+            "width: Minimum single dimension: 1cm",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains height",
+            "height: Minimum single dimension: 1cm",
+            responseBody.message,
+        );
     });
 
     test("Price calculation with missing Address", async ({
@@ -366,16 +399,17 @@ test.describe("Pricing tests - negative", () => {
         });
 
         const responseBody = await response.json();
-        expect.soft(response.status(), "Status code 400").toBe(400);
-        expect
-            .soft(responseBody.message, "Error message contains sender_address")
-            .toContain("sender_address: Sender address is required");
-        expect
-            .soft(
-                responseBody.message,
-                "Error message contains recipient_address",
-            )
-            .toContain("recipient_address: Recipient address is required");
+        statusCodeCheck(response.status(), 400);
+        errorExpectsContain(
+            "Error message contains sender_address",
+            "sender_address: Sender address is required",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains recipient_address",
+            "recipient_address: Recipient address is required",
+            responseBody.message,
+        );
     });
 
     test("Price calculation with missing Address property values", async ({
@@ -395,23 +429,17 @@ test.describe("Pricing tests - negative", () => {
         });
 
         const responseBody = await response.json();
-        expect.soft(response.status(), "Status code 400").toBe(400);
-        expect
-            .soft(
-                responseBody.message,
-                "Error message contains sender_address properties",
-            )
-            .toContain(
-                "sender_address: Sender address properties are required",
-            );
-        expect
-            .soft(
-                responseBody.message,
-                "Error message contains recipient_address properties",
-            )
-            .toContain(
-                "recipient_address: Recipient address properties are required",
-            );
+        statusCodeCheck(response.status(), 400);
+        errorExpectsContain(
+            "Error message contains sender_address properties",
+            "sender_address: Sender address properties are required",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains recipient_address properties",
+            "recipient_address: Recipient address properties are required",
+            responseBody.message,
+        );
     });
 
     test("Price calculation with values below minimum", async ({
@@ -428,19 +456,27 @@ test.describe("Pricing tests - negative", () => {
         });
 
         const responseBody = await response.json();
-        expect.soft(response.status(), "Status code 422").toBe(422);
-        expect
-            .soft(responseBody.message, "Error message contains weight")
-            .toContain("weight: Weight must be greater than zero");
-        expect
-            .soft(responseBody.message, "Error message contains length")
-            .toContain("length: Minimum single dimension: 1cm");
-        expect
-            .soft(responseBody.message, "Error message contains width")
-            .toContain("width: Minimum single dimension: 1cm");
-        expect
-            .soft(responseBody.message, "Error message contains height")
-            .toContain("height: Minimum single dimension: 1cm");
+        statusCodeCheck(response.status(), 422);
+        errorExpectsContain(
+            "Error message contains weight",
+            "weight: Weight must be greater than zero",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains length",
+            "length: Minimum single dimension: 1cm",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains width",
+            "width: Minimum single dimension: 1cm",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains height",
+            "height: Minimum single dimension: 1cm",
+            responseBody.message,
+        );
     });
 
     test("Price calculation with values above maximum", async ({
@@ -457,19 +493,46 @@ test.describe("Pricing tests - negative", () => {
         });
 
         const responseBody = await response.json();
-        expect.soft(response.status(), "Status code 422").toBe(422);
-        expect
-            .soft(responseBody.message, "Error message contains weight")
-            .toContain("weight: Maximum parcel weight: 30kg");
-        expect
-            .soft(responseBody.message, "Error message contains length")
-            .toContain("length: Maximum single dimension: 120cm");
-        expect
-            .soft(responseBody.message, "Error message contains width")
-            .toContain("width: Maximum single dimension: 120cm");
-        expect
-            .soft(responseBody.message, "Error message contains height")
-            .toContain("height: Maximum single dimension: 120cm");
+        statusCodeCheck(response.status(), 422);
+        errorExpectsContain(
+            "Error message contains weight",
+            "weight: Maximum parcel weight: 30kg",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains length",
+            "length: Maximum single dimension: 120cm",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains width",
+            "width: Maximum single dimension: 120cm",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains height",
+            "height: Maximum single dimension: 120cm",
+            responseBody.message,
+        );
+    });
+
+    test("Price calculation with ServiceType outside [0,2] range", async ({
+        api,
+        apiBaseUrl,
+    }) => {
+        calcDetails.service_type = -1;
+
+        const response = await api.post(`${apiBaseUrl}pricing`, {
+            data: calcDetails,
+        });
+
+        const responseBody = await response.json();
+        statusCodeCheck(response.status(), 400);
+        errorExpectsEqual(
+            "Error message is correct",
+            "service_type: Service type doesn't exist",
+            responseBody.message,
+        );
     });
 
     test("Price calculation with with same day cross-country service", async ({
@@ -488,10 +551,45 @@ test.describe("Pricing tests - negative", () => {
         });
 
         const responseBody = await response.json();
-        expect.soft(response.status(), "Status code 422").toBe(422);
-        expect
-            .soft(responseBody.message, "Error message about limitation")
-            .toContain("Same day cross-country service is not possible");
+        statusCodeCheck(response.status(), 422);
+        errorExpectsContain(
+            "Error message about limitation",
+            "Same day cross-country service is not possible",
+            responseBody.message,
+        );
+    });
+
+    test("Price calculation with Address property values being empty strings", async ({
+        api,
+        apiBaseUrl,
+    }) => {
+        calcDetails.sender_address = {
+            city: "",
+            postalCode: "",
+            countryCode: "",
+        };
+        calcDetails.recipient_address = {
+            city: "",
+            postalCode: "",
+            countryCode: "",
+        };
+
+        const response = await api.post(`${apiBaseUrl}pricing`, {
+            data: calcDetails,
+        });
+
+        const responseBody = await response.json();
+        statusCodeCheck(response.status(), 400);
+        errorExpectsContain(
+            "Error message contains sender_address properties",
+            "sender_address: Sender address properties are required",
+            responseBody.message,
+        );
+        errorExpectsContain(
+            "Error message contains recipient_address properties",
+            "recipient_address: Recipient address properties are required",
+            responseBody.message,
+        );
     });
 });
 
@@ -511,9 +609,11 @@ test.describe("Pricing tests - security", () => {
         } catch (e) {
             message = "";
         }
-        expect.soft(response.status(), "Status code 401").toBe(401);
-        expect
-            .soft(message, "Error message for unauthorized user")
-            .toBe("Unauthorized user");
+        statusCodeCheck(response.status(), 401);
+        errorExpectsEqual(
+            "Error message for unauthorized user",
+            "Unauthorized user",
+            message,
+        );
     });
 });
