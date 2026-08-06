@@ -14,6 +14,10 @@ dotenv.config();
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
+    testMatch: "**/*.spec.ts", //new
+
+    testIgnore: "**/setup/**/setup.ts", //new
+
     testDir: ".",
     /* Run tests in files in parallel */
     fullyParallel: true,
@@ -39,11 +43,13 @@ export default defineConfig({
         {
             name: "api",
             testDir: "./tests/api",
+            testMatch: "**/*.spec.ts", //new
         },
 
         {
             name: "e2e-ui",
             testDir: "./tests/e2e-ui",
+            testMatch: "**/*.spec.ts", //new
             use: { ...devices["Desktop Chrome"] },
         },
     ],
