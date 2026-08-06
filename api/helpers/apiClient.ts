@@ -14,7 +14,6 @@ export interface RequestInitOptions {
     data?: unknown;
     params?: Record<string, string | number | boolean>;
 }
-//? means it could be optional
 
 export interface AuthenticatedApiClientOptions {
     request: APIRequestContext;
