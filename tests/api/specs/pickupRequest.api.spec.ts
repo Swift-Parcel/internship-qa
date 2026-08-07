@@ -1,4 +1,4 @@
-import { test, expect } from "../setup/setup";
+import { test, expect } from "../setup/setupCustomerPortal";
 
 let customerId = 4;
 
