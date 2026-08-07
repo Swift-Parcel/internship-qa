@@ -1,4 +1,4 @@
-import { expect, test } from "../setup";
+import { expect, test } from "../setup/setupCustomerPortal";
 import { APIRequest, APIRequestContext, APIResponse } from "@playwright/test";
 
 type PickupRequestDetails = {
