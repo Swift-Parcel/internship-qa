@@ -1,3 +1,4 @@
+import { array } from "node:stream/iter";
 import { test, expect } from "../setup/setupBackOffice";
 
 type caseCreation = {
@@ -6,12 +7,42 @@ type caseCreation = {
     case_type: string;
     case_status: string;
     customer_email: string;
-    handler_id: number;
-    region_id: number;
+    handler_id: string;
+    region_id: string;
     channel: string;
     tag_ids: string[];
     parcel_ids: string[];
     priority: string;
+};
+
+type tag = {
+    id: number;
+    name: string;
+};
+
+type caseResponse = {
+    id: number;
+    case_number: string;
+    title: string;
+    description: string;
+    case_type: string;
+    status: string;
+    priority: string;
+    created_date: string;
+    updated_date: string | null;
+    is_escalated: boolean;
+    resolved_date: string | null;
+    sla_deadline: string;
+    channel: string;
+    resolution: string;
+    satisfaction_score: number | null;
+    customer_id: number;
+    customer_name: string;
+    handler_id: number;
+    handler_name: string;
+    region_id: number;
+    region_name: string;
+    tags: tag[];
 };
 
 let validRequest: caseCreation;
@@ -23,11 +54,11 @@ test.beforeEach(async () => {
         case_type: "DAMAGED",
         case_status: "OPEN",
         customer_email: "customer1@example.com",
-        handler_id: 1,
-        region_id: 1,
+        handler_id: "1",
+        region_id: "1",
         channel: "EMAIL",
-        tag_ids: ["1", "2"],
-        parcel_ids: ["1", "2"],
+        tag_ids: ["1"],
+        parcel_ids: ["1"],
         priority: "LOW",
     };
 });
@@ -38,8 +69,54 @@ test.describe("test backoffice case management suite", () => {
         apiBaseUrl,
     }) => {
         const response = await api.get(`${apiBaseUrl}cases`);
-        const bodyResponse = await response.json();
+        const bodyResponse: caseResponse[] = await response.json();
         expect(response.status()).toBe(200);
+        expect(Array.isArray(bodyResponse)).toBe(true);
+
+        bodyResponse.forEach((element) => {
+            expect(element).toMatchObject({
+                id: expect.any(Number),
+                case_number: expect.any(String),
+                title: expect.any(String),
+                description: expect.any(String),
+                case_type: expect.any(String),
+                status: expect.any(String),
+                priority: expect.any(String),
+                created_date: expect.any(String),
+                //updated_date: expect.any(String),
+                is_escalated: expect.any(Boolean),
+                //resolved_date: expect.any(String),
+                sla_deadline: expect.any(String),
+                channel: expect.any(String),
+                //resolution: expect.anything,
+                customer_id: expect.any(Number),
+                customer_name: expect.any(String),
+                handler_id: expect.any(Number),
+                handler_name: expect.any(String),
+                region_id: expect.any(Number),
+                region_name: expect.any(String),
+                tags: expect.any(Array),
+            });
+            expect(
+                element.resolution === null ||
+                    typeof element.resolution === "string",
+            ).toBe(true);
+
+            expect(
+                element.resolved_date === null ||
+                    typeof element.resolved_date === "string",
+            ).toBe(true);
+
+            expect(
+                element.updated_date === null ||
+                    typeof element.updated_date === "string",
+            ).toBe(true);
+
+            expect(
+                element.satisfaction_score === null ||
+                    typeof element.satisfaction_score === "number",
+            ).toBe(true);
+        });
     });
 
     test("testing retrieving case for operator see only region assigned to", async ({
@@ -178,6 +255,57 @@ test.describe("test backoffice case management suite", () => {
             expect(response.status()).toBe(400);
             //expect (bodyResponse.message).toBe("Handler does not exist");
             //case assignment to a user with maximum open cases should not be allowed.
+        });
+    });
+
+    test.describe("test case transition suite", () => {
+        test("test assigning a transition doesnt exist", async ({
+            api,
+            apiBaseUrl,
+        }) => {
+            const invalidTransiton = "WRONG_STATUS";
+            const case_id = 1;
+            const response = api.put(
+                `${apiBaseUrl}cases/${case_id}/transition`,
+                {
+                    data: {
+                        case_status: invalidTransiton,
+                    },
+                },
+            );
+            expect((await response).status).toBe(400);
+            expect(validRequest.case_status).toBe("OPEN");
+        });
+
+        test("case transition from open to in progress ", async ({
+            api,
+            apiBaseUrl,
+        }) => {
+            const case_id = 1;
+            const ValidTransition = [
+                "OPEN",
+                "IN_PROGRESS",
+                "RESOLVED",
+                "CLOSED",
+            ];
+            const invalidTransitions = [
+                "RESOLVED",
+                "IN_PROGRESS",
+                "CLOSED",
+                "AWAITING_CUSTOMER",
+            ];
+            for (const status of ValidTransition) {
+                const response = await api.patch(
+                    `${apiBaseUrl}cases/${case_id}/transition`,
+                    {
+                        data: {
+                            case_status: status,
+                        },
+                    },
+                );
+                const bodyResponse = await response.json();
+                expect(response.status()).toBe(200);
+            }
         });
     });
 });
