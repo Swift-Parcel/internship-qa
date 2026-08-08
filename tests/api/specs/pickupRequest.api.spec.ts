@@ -1,6 +1,13 @@
 import { test, expect } from "../setup/setup";
 
 let customerId = 4;
+type Address = {
+    city: string;
+    street: string;
+    postal_code: string;
+    country_code: string;
+    street_number: string;
+};
 
 type PickupRequest = {
     preferredPickupDate: string;
@@ -10,25 +17,37 @@ type PickupRequest = {
     parcelWidth: number;
     parcelWeight: number;
     preferredTimeSlot: string;
-    recipientAddress: number;
+    recipientAddress: Address;
     recipientName: string | null;
-    senderAddress: number;
+    senderAddress: Address;
     serviceType: string;
 };
 let validRequest: PickupRequest;
 
 test.beforeEach(async () => {
     validRequest = {
-        preferredPickupDate: "2026-08-03",
+        preferredPickupDate: "2026-08-08",
         declaredValue: 5000,
         parcelHeight: 120,
         parcelLength: 120,
         parcelWidth: 120,
         parcelWeight: 30,
         preferredTimeSlot: "EVENING",
-        recipientAddress: 2,
-        recipientName: "bad wolf",
-        senderAddress: 1,
+        recipientAddress: {
+            city: "Budapest",
+            street: "string",
+            postal_code: "1037",
+            country_code: "HU",
+            street_number: "string",
+        },
+        recipientName: "Bad Wolf",
+        senderAddress: {
+            city: "Lisbon",
+            street: "string",
+            postal_code: "3037",
+            country_code: "PT",
+            street_number: "string",
+        },
         serviceType: "STANDARD",
     };
 });
@@ -44,14 +63,14 @@ test.describe("test request pickup suite", () => {
                 data: validRequest,
             },
         );
-        const apiMessage = await response.text();
+        const bodyResponse = await response.json();
         expect(
             (await response).status(),
             "Response should have status 201",
         ).toBe(201);
 
         expect(
-            apiMessage,
+            bodyResponse.message,
             "message when pickup request is created successfully",
         ).toBe("Pickup Request created");
     });
@@ -64,8 +83,9 @@ test.describe("test request pickup suite", () => {
                 data: validRequest,
             },
         );
+        const responseBody = await response.json();
         expect(response.status()).toBe(400);
-        expect(await response.text()).toBe("pickup date must be in the future");
+        expect(responseBody.message).toBe("invalid date in the past");
     });
 
     test("test partial data submitted", async ({ api, apiBaseUrl }) => {
@@ -100,8 +120,9 @@ test.describe("test request pickup suite", () => {
         api,
         apiBaseUrl,
     }) => {
-        validRequest.recipientAddress = 3;
-        validRequest.senderAddress = 2;
+        validRequest.recipientAddress.country_code = "PT";
+        validRequest.senderAddress.country_code = "CA";
+
         validRequest.serviceType = "SAME_DAY";
         const response = await api.post(
             `${apiBaseUrl}customer/${customerId}/pickup-requests`,
@@ -110,7 +131,8 @@ test.describe("test request pickup suite", () => {
             },
         );
         expect(response.status()).toBe(400);
-        expect(await response.text()).toBe(
+        const responseBody = await response.json();
+        expect(responseBody.message).toBe(
             "Same-Day service is not available for cross-country routes",
         );
     });
@@ -120,7 +142,8 @@ test.describe("test request pickup suite", () => {
         apiBaseUrl,
     }) => {
         validRequest.serviceType = "SAME_DAY";
-        validRequest.recipientAddress = validRequest.senderAddress = 1;
+        validRequest.recipientAddress.country_code = "HU";
+        validRequest.senderAddress.country_code = "HU";
 
         const response = await api.post(
             `${apiBaseUrl}customer/${customerId}/pickup-requests`,
@@ -169,7 +192,8 @@ test.describe("test request pickup suite", () => {
                         reponse.status(),
                         "selected time slot is invalid for express",
                     ).toBe(400);
-                    expect(await reponse.text()).toBe(
+                    const bodyResponse = await reponse.json();
+                    expect(await bodyResponse.message).toBe(
                         "Express service must be requested at least 2 hours before the time slot starts",
                     );
                     return;
@@ -180,11 +204,12 @@ test.describe("test request pickup suite", () => {
                     data: validRequest,
                 },
             );
+            const responseBody = await reponse.json();
             expect(
                 reponse.status(),
                 "selected time slot is valid for express",
             ).toBe(201);
-            expect(await reponse.text()).toBe("pickup Request created");
+            expect(await responseBody.message).toBe("Pickup Request created");
         } else if (validRequest.preferredPickupDate > today) {
             const reponse = await api.post(
                 `${apiBaseUrl}customer/${customerId}/pickup-requests`,
@@ -192,11 +217,12 @@ test.describe("test request pickup suite", () => {
                     data: validRequest,
                 },
             );
+            const responseBody = await reponse.json();
             expect(
                 reponse.status(),
                 "selected time slot is valid for express on future date",
             ).toBe(201);
-            expect(await reponse.text()).toBe("pickup Request created");
+            expect(await responseBody.message).toBe("pickup Request created");
         }
     });
 
