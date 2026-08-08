@@ -1,7 +1,8 @@
 import { APIRequestContext } from "@playwright/test";
 
 export interface AuthCredentials {
-    username: string;
+    username?: string;
+    email?: string;
     password: string;
 }
 
