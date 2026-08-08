@@ -42,7 +42,7 @@ test.describe("test backoffice reporting suite", () => {
             );
             const response = await api.get(`${apiBaseUrl}reports/sla-breaches`);
             const bodyResponse = await response.json();
-            expect(response.status()).toBe(401);
+            expect(response.status()).toBe(403);
 
             expect(bodyResponse).toMatchObject({
                 current_breaches: expect.any(Number),
