@@ -1,7 +1,7 @@
 import { test, expect } from "../setup/setupBackOffice";
 
 test.describe(" Back Office Case Notes Validation", () => {
-    const validCaseNumber = "CASE-2024-001";
+    const validCaseNumber = "CASE-2024-004";
     const nonExistentCaseNumber = "CASE-9999-999";
     const invalidFormatCaseNumber = "INVALID_CASE_FORMAT_!@#$";
 
@@ -40,9 +40,7 @@ test.describe(" Back Office Case Notes Validation", () => {
         integrationHeaders = {
             "X-Api-Key": integrationSecretKey,
             Authorization: authToken,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-        };
+        }; //we need that ones for access
     });
 
     test.describe("GET /api/integration/cases/{caseNumber}/notes", () => {
@@ -56,7 +54,7 @@ test.describe(" Back Office Case Notes Validation", () => {
 
             const responseData = await response.json().catch(() => null);
 
-            console.log("\nResponse Status:", response.status());
+            console.log("Response Status:", response.status());
             console.log(
                 "Response Body:",
                 JSON.stringify(responseData, null, 2),
@@ -72,6 +70,11 @@ test.describe(" Back Office Case Notes Validation", () => {
             responseData.forEach((noteItem: any) => {
                 expect(noteItem).toHaveProperty("timestamp");
                 expect(noteItem).toHaveProperty("note");
+                expect(noteItem).toHaveProperty("handler_id");
+                expect(noteItem).toHaveProperty("handler_name");
+                expect(noteItem).toHaveProperty("customer_id");
+                expect(noteItem).toHaveProperty("customer_name");
+                expect(noteItem).toHaveProperty("attachment");
             });
         });
 
@@ -82,14 +85,6 @@ test.describe(" Back Office Case Notes Validation", () => {
             const response = await request.get(endpoint, {
                 headers: integrationHeaders,
             });
-
-            const responseData = await response.json().catch(() => null);
-
-            console.log("\nResponse Status:", response.status());
-            console.log(
-                "Response Body:",
-                JSON.stringify(responseData, null, 2),
-            );
 
             expect(response.status()).toBe(404);
         });
@@ -129,6 +124,83 @@ test.describe(" Back Office Case Notes Validation", () => {
 
             const response = await request.get(endpoint, {
                 headers: invalidHeaders,
+            });
+
+            expect(response.status()).toBe(401);
+        });
+    });
+    test.describe("POST /api/integration/cases/{caseNumber}/notes", () => {
+        test("1. Should successfully add a new note using exact payload schema (200/201 OK)", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}integration/cases/${validCaseNumber}/notes`;
+
+            const notePayload = {
+                message: "Customer confirmed they received the damaged parcel.",
+                is_internal: false,
+                attachment: "test",
+            };
+
+            const response = await request.post(endpoint, {
+                headers: integrationHeaders,
+                data: notePayload,
+            });
+
+            const responseData = await response.json().catch(() => null);
+
+            console.log("Response Status:", response.status());
+            console.log(
+                "Response Body:",
+                JSON.stringify(responseData, null, 2),
+            );
+
+            expect(response.status()).toBe(200);
+        });
+
+        test("2. Should return 400 Bad Request when note payload is empty", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}integration/cases/${validCaseNumber}/notes`;
+            const invalidPayload = {};
+
+            const response = await request.post(endpoint, {
+                headers: integrationHeaders,
+                data: invalidPayload,
+            });
+
+            expect(response.status()).toBe(400);
+        });
+
+        test("3. Should return 400 Bad Request when adding a note to a non-existent case", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}integration/cases/${nonExistentCaseNumber}/notes`;
+            const notePayload = {
+                message: "Testing note for a missing case.",
+                is_internal: true,
+                attachment: "",
+            };
+
+            const response = await request.post(endpoint, {
+                headers: integrationHeaders,
+                data: notePayload,
+            });
+
+            expect(response.status()).toBe(400);
+        });
+
+        test("4. Should return 401 Unauthorized when adding a note without API Key", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}integration/cases/${validCaseNumber}/notes`;
+            const notePayload = {
+                message: "Unauthorized note attempt.",
+                is_internal: false,
+                attachment: "",
+            };
+
+            const response = await request.post(endpoint, {
+                data: notePayload,
             });
 
             expect(response.status()).toBe(401);
