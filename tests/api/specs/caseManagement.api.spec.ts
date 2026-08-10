@@ -1,6 +1,4 @@
-import { array } from "node:stream/iter";
 import { test, expect } from "../setup/setupBackOffice";
-
 type caseCreation = {
     title: string;
     description: string;
@@ -91,8 +89,8 @@ test.describe("test backoffice case management suite", () => {
                 //resolution: expect.anything,
                 customer_id: expect.any(Number),
                 customer_name: expect.any(String),
-                handler_id: expect.any(Number),
-                handler_name: expect.any(String),
+                //handler_id: expect.any(Number),
+                // handler_name: expect.any(String),
                 region_id: expect.any(Number),
                 region_name: expect.any(String),
                 tags: expect.any(Array),
@@ -116,6 +114,14 @@ test.describe("test backoffice case management suite", () => {
                 element.satisfaction_score === null ||
                     typeof element.satisfaction_score === "number",
             ).toBe(true);
+            expect(
+                element.handler_id === null ||
+                    typeof element.handler_id === "number",
+            ).toBe(true);
+            expect(
+                element.handler_name === null ||
+                    typeof element.handler_name === "string",
+            ).toBe(true);
         });
     });
 
@@ -135,7 +141,10 @@ test.describe("test backoffice case management suite", () => {
                 data: validRequest,
             });
             const bodyResponse = await response.json();
-            expect(response.status()).toBe(201);
+            expect(response.status()).toBe(200);
+            expect(bodyResponse).toMatchObject({
+                case_number: expect.any(String),
+            });
         });
 
         test("case creation with valid customer email ", async ({
@@ -145,167 +154,193 @@ test.describe("test backoffice case management suite", () => {
             const response = await api.post(`${apiBaseUrl}cases`, {
                 data: validRequest,
             });
+
             const bodyResponse = await response.json();
-            //expect(response.status()).toBe(400);
-            //expect (bodyResponse.message).toBe("Invalid customer email");
+            expect(response.status()).toBe(200);
+            expect(bodyResponse).toMatchObject({
+                case_number: expect.any(String),
+            });
         });
         test("case creation with invalid customer email that does not exist", async ({
             api,
             apiBaseUrl,
         }) => {
+            const email = "invalidemail@example.com";
+            validRequest.customer_email = email;
             const response = await api.post(`${apiBaseUrl}cases`, {
                 data: validRequest,
             });
+            console.log(validRequest.customer_email);
             const bodyResponse = await response.json();
-            //expect(response.status()).toBe(400);
-            //expect (bodyResponse.message).toBe("Invalid customer email");
+            expect(response.status()).toBe(404);
+            expect(bodyResponse.message).toBe(
+                `Customer with email '${email}' does not exist.`,
+            );
         });
         test("case creation with a vip customer email ", async ({
             api,
             apiBaseUrl,
         }) => {
+            const email = "petra.mueller@outlook.com";
+            validRequest.customer_email = email;
             const response = await api.post(`${apiBaseUrl}cases`, {
                 data: validRequest,
             });
             const bodyResponse = await response.json();
-            expect(response.status()).toBe(201);
-            //expect the case to have a priority of HIGH
+            expect(response.status()).toBe(200);
             expect(bodyResponse.priority).toBe("HIGH");
-        });
-
-        test("case should not be assigned to more than one handler ", async ({
-            api,
-            apiBaseUrl,
-        }) => {
-            const response = await api.post(`${apiBaseUrl}cases`, {
-                data: validRequest,
-            });
-            const bodyResponse = await response.json();
-            //check that the case is assigned to only one handler
+            //expect the case to have a priority of HIGH
         });
     });
 
     test.describe("test backoffice case assignment suite", () => {
         test("case assignment to a handler ", async ({ api, apiBaseUrl }) => {
-            const response = await api.post(`${apiBaseUrl}cases/assign`, {
-                data: {
-                    case_id: 1,
-                    handler_id: 1,
+            const case_number = "CASE-2026-0001009";
+            const response = await api.post(
+                `${apiBaseUrl}/api/cases/${case_number}/assign`,
+                {
+                    data: {
+                        handler_id: 4,
+                    },
                 },
-            });
+            );
             const bodyResponse = await response.json();
             expect(response.status()).toBe(200);
-        });
-        test("case assignment to a handler that does not exist ", async ({
-            api,
-            apiBaseUrl,
-        }) => {
-            const case_id = 1;
-            const handler_id = 999; // Assuming this handler ID does not exist
-            const response = await api.post(
-                `${apiBaseUrl}api/cases/${case_id}/assign`,
-                {
-                    data: {
-                        handler_id: handler_id,
-                    },
-                },
-            );
-            const bodyResponse = await response.json();
-            expect(response.status()).toBe(400);
-            //expect (bodyResponse.message).toBe("Handler does not exist");
-            //case assignment is only depart to depart IE LOST should be assigned to that department.
+            //assert the body returned
         });
 
-        test("case reassignment to a different handler ", async ({
+        test("case should not be assigned to more than one handler and case reassignment ", async ({
             api,
             apiBaseUrl,
         }) => {
-            //previously assigned case reassigned to another hanlder.
-            const case_id = 1;
-            const handler_id = 999; // Assuming this handler ID does not exist
-            const response = await api.post(
-                `${apiBaseUrl}api/cases/${case_id}/assign`,
-                {
-                    data: {
-                        handler_id: handler_id,
-                    },
-                },
-            );
-            const bodyResponse = await response.json();
-            expect(response.status()).toBe(400);
-            //expect (bodyResponse.message).toBe("Handler does not exist");
-            //case assignment is only depart to depart IE LOST should be assigned to that department.
-        });
-        test("case reassignment to a handler with maximum open cases ", async ({
-            api,
-            apiBaseUrl,
-        }) => {
-            //test case reassignment to a handler with maximum open cases
-            const case_id = 1;
-            const handler_id = 999; // Assuming this handler ID does not exist
-            const response = await api.post(
-                `${apiBaseUrl}api/cases/${case_id}/assign`,
-                {
-                    data: {
-                        handler_id: handler_id,
-                    },
-                },
-            );
-            const bodyResponse = await response.json();
-            expect(response.status()).toBe(400);
-            //expect (bodyResponse.message).toBe("Handler does not exist");
-            //case assignment to a user with maximum open cases should not be allowed.
-        });
-    });
+            const case_number = "CASE-2026-0001009";
+            const handlerIds = [1, 2];
 
-    test.describe("test case transition suite", () => {
-        test("test assigning a transition doesnt exist", async ({
-            api,
-            apiBaseUrl,
-        }) => {
-            const invalidTransiton = "WRONG_STATUS";
-            const case_id = 1;
-            const response = api.put(
-                `${apiBaseUrl}cases/${case_id}/transition`,
-                {
-                    data: {
-                        case_status: invalidTransiton,
-                    },
-                },
-            );
-            expect((await response).status).toBe(400);
-            expect(validRequest.case_status).toBe("OPEN");
-        });
-
-        test("case transition from open to in progress ", async ({
-            api,
-            apiBaseUrl,
-        }) => {
-            const case_id = 1;
-            const ValidTransition = [
-                "OPEN",
-                "IN_PROGRESS",
-                "RESOLVED",
-                "CLOSED",
-            ];
-            const invalidTransitions = [
-                "RESOLVED",
-                "IN_PROGRESS",
-                "CLOSED",
-                "AWAITING_CUSTOMER",
-            ];
-            for (const status of ValidTransition) {
-                const response = await api.patch(
-                    `${apiBaseUrl}cases/${case_id}/transition`,
+            for (var item in handlerIds) {
+                const response = await api.post(
+                    `${apiBaseUrl}/api/cases/${case_number}/assign`,
                     {
                         data: {
-                            case_status: status,
+                            handler_id: item,
                         },
                     },
                 );
                 const bodyResponse = await response.json();
                 expect(response.status()).toBe(200);
+                expect(bodyResponse.handler_id).toBe(item);
             }
         });
+
+        test("case assignment to a handler that does not exist ", async ({
+            api,
+            apiBaseUrl,
+        }) => {
+            const case_number = "CASE-2026-0001009";
+            const handler_id = 999; // Assuming this handler ID does not exist
+            const response = await api.post(
+                `${apiBaseUrl}/api/cases/${case_number}/assign`,
+                {
+                    data: {
+                        handler_id: handler_id,
+                    },
+                },
+            );
+            const bodyResponse = await response.json();
+            expect(response.status()).toBe(404);
+            expect(bodyResponse.message).toBe(
+                `Handler with id ${handler_id} is not found`,
+            );
+        });
+
+        test("case assignment to a case that does not exist ", async ({
+            api,
+            apiBaseUrl,
+        }) => {
+            const case_number = "CASE-2026-INVALID";
+            const handler_id = 4;
+            const response = await api.post(
+                `${apiBaseUrl}/api/cases/${case_number}/assign`,
+                {
+                    data: {
+                        handler_id: handler_id,
+                    },
+                },
+            );
+            const bodyResponse = await response.json();
+            expect(response.status()).toBe(400);
+            expect(bodyResponse.message).toBe(
+                `Case with case number${case_number} is not found.`,
+            );
+            //case assignment is only depart to depart IE LOST should be assigned to that department.
+        });
+    });
+    test("case reassignment to a handler with maximum open cases ", async ({
+        api,
+        apiBaseUrl,
+    }) => {
+        //test case reassignment to a handler with maximum open cases
+        const case_number = "CASE-2026-0001017";
+        const handler_id = 7; // maximum open case 2
+
+        const response = await api.post(
+            `${apiBaseUrl}api/cases/${case_number}/assign`,
+            {
+                data: {
+                    handler_id: handler_id,
+                },
+            },
+        );
+
+        const bodyResponse = await response.json();
+        expect(response.status()).toBe(409);
+        expect(bodyResponse.message).toBe(
+            `Handler '${handler_id}' has reached maximum capacity (2).`,
+        );
+    });
+});
+
+test.describe("test case transition suite", () => {
+    test("test assigning a transition doesnt exist", async ({
+        api,
+        apiBaseUrl,
+    }) => {
+        const invalidTransiton = "WRONG_STATUS";
+        const case_number = "CASE-2026-0001017";
+        const response = api.put(
+            `${apiBaseUrl}/api/cases/${case_number}/status`,
+            {
+                data: {
+                    case_status: invalidTransiton,
+                },
+            },
+        );
+        expect((await response).status).toBe(400);
+        expect(validRequest.case_status).toBe("OPEN");
+    });
+
+    test("case transition from open to in progress ", async ({
+        api,
+        apiBaseUrl,
+    }) => {
+        const case_id = 1;
+        const ValidTransition = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
+        const invalidTransitions = [
+            "RESOLVED",
+            "IN_PROGRESS",
+            "CLOSED",
+            "AWAITING_CUSTOMER",
+        ];
+        for (const status of ValidTransition) {
+            const response = await api.patch(
+                `${apiBaseUrl}/api/cases/${case_number}/status`,
+                {
+                    data: {
+                        case_status: status,
+                    },
+                },
+            );
+            const bodyResponse = await response.json();
+            expect(response.status()).toBe(200);
+        }
     });
 });
