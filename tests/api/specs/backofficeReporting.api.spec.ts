@@ -1,4 +1,8 @@
+import { get } from "node:http";
+import { getBearerToken } from "../../../api/helpers/auth";
 import { test, expect } from "../setup/setupBackOffice";
+import { request as playwrightRequest } from "@playwright/test";
+import { createApiClientWithBearerToken } from "../../../api/helpers/apiClient";
 
 test.describe("test backoffice reporting suite", () => {
     test("testing cases by count", async ({ api, apiBaseUrl }) => {
@@ -26,35 +30,52 @@ test.describe("test backoffice reporting suite", () => {
     });
 
     test("testing accessing reports with a none admin role", async ({
-        api,
         apiBaseUrl,
     }) => {
-        const username = process.env.BACKOFFICE_API_USERNAME;
-        const password = process.env.BACKOFFICE_API_PASSWORD;
-        //access report with a non admin role.
-        try {
-            process.env.BACKOFFICE_API_USERNAME = "readonly";
-            process.env.BACKOFFICE_API_PASSWORD = "ReadOnly123!";
+        //create new api request with different username token
+        const requestContext = await playwrightRequest.newContext();
 
-            console.log(
-                process.env.BACKOFFICE_API_USERNAME,
-                process.env.BACKOFFICE_API_PASSWORD,
+        try {
+            function getRequiredEnv(name: string): string {
+                const value = process.env[name];
+
+                if (!value) {
+                    throw new Error(
+                        `Missing required environment variable: ${name}. Configure it in .env.`,
+                    );
+                }
+
+                return value;
+            }
+            const bearerToken = await getBearerToken(requestContext, {
+                authUrl: getRequiredEnv("BACKOFFICE_API_AUTH_URL"),
+                credentials: {
+                    username: getRequiredEnv(
+                        "READONLY_BACKOFFICE_API_USERNAME",
+                    ),
+                    password: getRequiredEnv(
+                        "READONLY_BACKOFFICE_API_PASSWORD",
+                    ),
+                },
+                tokenPath: process.env.BACKOFFICE_API_TOKEN_PATH ?? "token",
+            });
+
+            const readonlyApi = createApiClientWithBearerToken({
+                request: requestContext,
+                bearerToken,
+            });
+            const response = await readonlyApi.get(
+                `${apiBaseUrl}reports/sla-breaches`,
             );
-            const response = await api.get(`${apiBaseUrl}reports/sla-breaches`);
             const bodyResponse = await response.json();
+
             expect(response.status()).toBe(403);
 
-            expect(bodyResponse).toMatchObject({
-                current_breaches: expect.any(Number),
-                historical_breaches: expect.any(Number),
-            });
             expect(bodyResponse.message).toBe(
-                "Not authorised to access this report",
+                "User does not have permission to perform this action.",
             );
         } finally {
-            // Restore the original environment variables
-            process.env.BACKOFFICE_API_USERNAME = username;
-            process.env.BACKOFFICE_API_PASSWORD = password;
+            await requestContext.dispose();
         }
     });
 
