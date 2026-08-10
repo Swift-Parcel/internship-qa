@@ -1,5 +1,5 @@
 import { expect, test } from "../setup/setupCustomerPortal";
-import { APIRequest, APIRequestContext, APIResponse } from "@playwright/test";
+import { APIRequestContext } from "@playwright/test";
 
 type PickupRequestDetails = {
     preferredPickupDate: string;
@@ -135,7 +135,7 @@ test.beforeEach(async () => {
     };
 });
 
-test.describe("Pricing tests - positive", {}, () => {
+test.describe("Pricing tests - positive", () => {
     test.describe.configure({ mode: "serial" });
 
     test(
