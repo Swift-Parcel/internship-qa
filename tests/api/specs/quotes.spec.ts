@@ -260,7 +260,9 @@ test.describe("Quote tests - security", { tag: "@security" }, () => {
         statusCodeCheck(response.status(), 403);
         expect
             .soft(message, "Error message for unauthorized user")
-            .toBe("Forbidden");
+            .toBe(
+                "Access denied: Pickup request does not belong to the customer",
+            );
     });
 
     test("Quote retrieval with missing authentication token", async ({
