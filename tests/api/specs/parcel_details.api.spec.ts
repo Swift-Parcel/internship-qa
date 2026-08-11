@@ -1,6 +1,6 @@
 import { test, expect } from "../setup/setupBackOffice";
 
-test.describe("Back-Office Integration API — Parcel Validation", () => {
+test.describe("Back-Office Parcel Details", () => {
     const validTrackingNumber = "SP-20230101";
     const nonExistentTrackingNumber = "SP-99999999";
 
