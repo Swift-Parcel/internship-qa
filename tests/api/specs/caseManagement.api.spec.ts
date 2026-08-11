@@ -1,5 +1,4 @@
 import { test, expect } from "../setup/setupBackOffice";
-
 type caseCreation = {
     title: string;
     description: string;
@@ -198,7 +197,7 @@ test.describe("test backoffice case management suite", () => {
         test("case assignment to a handler ", async ({ api, apiBaseUrl }) => {
             const case_number = "CASE-2026-0001009";
             const response = await api.post(
-                `${apiBaseUrl}/api/cases/${case_number}/assign`,
+                `${apiBaseUrl}cases/${case_number}/assign`,
                 {
                     data: {
                         handler_id: 4,
@@ -215,17 +214,18 @@ test.describe("test backoffice case management suite", () => {
             apiBaseUrl,
         }) => {
             const case_number = "CASE-2026-0001009";
-            const handlerIds = [1, 2];
+            const handlerIds = [2, 4];
 
-            for (var item in handlerIds) {
+            for (const item of handlerIds) {
                 const response = await api.post(
-                    `${apiBaseUrl}/api/cases/${case_number}/assign`,
+                    `${apiBaseUrl}cases/${case_number}/assign`,
                     {
                         data: {
                             handler_id: item,
                         },
                     },
                 );
+
                 const bodyResponse = await response.json();
                 expect(response.status()).toBe(200);
                 expect(bodyResponse.handler_id).toBe(item);
@@ -324,24 +324,102 @@ test.describe("test case transition suite", () => {
         apiBaseUrl,
     }) => {
         const case_number = "CASE-2026-0001017";
-        const ValidTransition = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
-        const invalidTransitions = [
-            "RESOLVED",
+        const ValidTransition = [
+            "OPEN",
             "IN_PROGRESS",
-            "CLOSED",
             "AWAITING_CUSTOMER",
+            "RESOLVED",
+            "CLOSED",
         ];
-        for (var item in ValidTransition) {
-            const response = await api.post(
-                `${apiBaseUrl}cases/${case_number}/change-status`,
-                {
-                    data: {
-                        status: item,
+
+        for (let i = 1; i < ValidTransition.length - 1; i++) {
+            const currentStatus = ValidTransition[i];
+            const nextStatus = ValidTransition[i + 1];
+            let prevStatus = ValidTransition[i];
+
+            try {
+                // Immediate next status is valid
+                const response = await api.post(
+                    `${apiBaseUrl}cases/${case_number}/change-status`,
+                    {
+                        data: {
+                            status: nextStatus,
+                        },
                     },
-                },
-            );
-            const bodyResponse = await response.json();
-            expect(response.status()).toBe(200);
+                );
+                const bodyResponse = await response.json();
+                console.log(bodyResponse);
+                expect(response.status()).toBe(200);
+                //expect(bodyResponse.message).toBe("status update");
+            } finally {
+                if (prevStatus == "AWAITING_CUSTOMER") {
+                    prevStatus = ValidTransition[i - 1];
+                }
+                // test reverting backwards to prev
+                const response = await api.post(
+                    `${apiBaseUrl}cases/${case_number}/change-status`,
+                    {
+                        data: {
+                            status: prevStatus,
+                        },
+                    },
+                );
+                const bodyResponse = await response.json();
+                console.log(bodyResponse);
+                expect(response.status()).toBe(200);
+                //expect(bodyResponse.message).toBe("status update");
+            }
+
+            // The status after the next one should not be allowed
+            //can skip awaiting customer
+            if (
+                i + 1 < ValidTransition.length &&
+                ValidTransition[i + 1] !== "AWAITING_CUSTOMER"
+            ) {
+                try {
+                    const skippedStatus = ValidTransition[i + 2];
+                    const response = await api.post(
+                        `${apiBaseUrl}cases/${case_number}/change-status`,
+                        {
+                            data: {
+                                status: skippedStatus,
+                            },
+                        },
+                    );
+                    const bodyResponse = await response.json();
+                    console.log(bodyResponse);
+                    expect(response.status()).toBe(400);
+                    expect(bodyResponse.message).toBe("cant skip");
+                } finally {
+                    const skippedStatus = ValidTransition[i + 2];
+                    const response = await api.post(
+                        `${apiBaseUrl}cases/${case_number}/change-status`,
+                        {
+                            data: {
+                                status: nextStatus,
+                            },
+                        },
+                    );
+                    const bodyResponse = await response.json();
+                    console.log(bodyResponse);
+                    expect(response.status()).toBe(200);
+                    expect(bodyResponse.message).toBe("okay");
+                }
+            }
         }
+        //test from close back to open
+        const firstStatus = "OPEN";
+        const response = await api.post(
+            `${apiBaseUrl}cases/${case_number}/change-status`,
+            {
+                data: {
+                    status: firstStatus,
+                },
+            },
+        );
+        const bodyResponse = await response.json();
+        console.log(bodyResponse);
+        expect(response.status()).toBe(400);
+        expect(bodyResponse.message).toBe("cant update to start");
     });
 });
