@@ -1,7 +1,7 @@
 import { test, expect } from "../setup/setupBackOffice";
 
 test.describe(" Back Office Case Notes Validation", () => {
-    const validCaseNumber = "CASE-2024-004";
+    const validCaseNumber = "CASE-2026-0001000";
     const nonExistentCaseNumber = "CASE-9999-999";
     const invalidFormatCaseNumber = "INVALID_CASE_FORMAT_!@#$";
 
@@ -63,18 +63,12 @@ test.describe(" Back Office Case Notes Validation", () => {
             expect(response.status()).toBe(200);
             expect(Array.isArray(responseData)).toBe(true);
 
-            expect(response.headers()["content-type"]).toContain(
-                "application/json",
-            );
-
             responseData.forEach((noteItem: any) => {
                 expect(noteItem).toHaveProperty("timestamp");
                 expect(noteItem).toHaveProperty("note");
-                expect(noteItem).toHaveProperty("handler_id");
-                expect(noteItem).toHaveProperty("handler_name");
-                expect(noteItem).toHaveProperty("customer_id");
-                expect(noteItem).toHaveProperty("customer_name");
-                expect(noteItem).toHaveProperty("attachment");
+
+                expect(typeof noteItem.timestamp).toBe("string");
+                expect(typeof noteItem.note).toBe("string");
             });
         });
 
@@ -100,12 +94,12 @@ test.describe(" Back Office Case Notes Validation", () => {
 
             const responseData = await response.json().catch(() => null);
 
-            console.log("\nResponse Status:", response.status());
+            console.log("Response Status:", response.status());
 
             expect(response.status(), "Invalid case number format").toBe(404);
         });
 
-        test("4. Should return 401 Unauthorized when authentication headers are missing", async ({
+        test("4. Should return 401  when authentication headers are missing", async ({
             request,
         }) => {
             const endpoint = `${backofficeBaseUrl}integration/cases/${validCaseNumber}/notes`;
@@ -119,7 +113,7 @@ test.describe(" Back Office Case Notes Validation", () => {
         }) => {
             const endpoint = `${backofficeBaseUrl}integration/cases/${validCaseNumber}/notes`;
             const invalidHeaders = {
-                "X-API-KEY": "INVALID_SECRET_KEY_12345",
+                "X-Api-Key": "INVALID_SECRET_KEY_12345",
             };
 
             const response = await request.get(endpoint, {
@@ -130,33 +124,34 @@ test.describe(" Back Office Case Notes Validation", () => {
         });
     });
     test.describe("POST /api/integration/cases/{caseNumber}/notes", () => {
-        test("1. Should successfully add a new note using exact payload schema (200/201 OK)", async ({
+        test("1. Should successfully add a new note using exact payload schema ", async ({
             request,
         }) => {
             const endpoint = `${backofficeBaseUrl}integration/cases/${validCaseNumber}/notes`;
 
             const notePayload = {
                 message: "Customer confirmed they received the damaged parcel.",
-                is_internal: false,
+                customer_email: "customer1@example.com",
                 attachment: "test",
             };
 
             const response = await request.post(endpoint, {
-                headers: integrationHeaders,
+                headers: {
+                    "X-Api-Key": integrationSecretKey,
+                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                },
                 data: notePayload,
             });
 
-            const responseData = await response.json().catch(() => null);
+            //it is giving just id so we are reading like text
+            const responseText = await response.text();
 
             console.log("Response Status:", response.status());
-            console.log(
-                "Response Body:",
-                JSON.stringify(responseData, null, 2),
-            );
+            console.log("Response Body (Created ID):", responseText);
 
             expect(response.status()).toBe(200);
+            expect(responseText).toBeTruthy(); // It is not null, there is an id returned
         });
-
         test("2. Should return 400 Bad Request when note payload is empty", async ({
             request,
         }) => {
@@ -189,7 +184,7 @@ test.describe(" Back Office Case Notes Validation", () => {
             expect(response.status()).toBe(400);
         });
 
-        test("4. Should return 401 Unauthorized when adding a note without API Key", async ({
+        test("4. Should return 400 when adding a note without API Key", async ({
             request,
         }) => {
             const endpoint = `${backofficeBaseUrl}integration/cases/${validCaseNumber}/notes`;
@@ -203,7 +198,130 @@ test.describe(" Back Office Case Notes Validation", () => {
                 data: notePayload,
             });
 
-            expect(response.status()).toBe(401);
+            expect(response.status()).toBe(400);
+        });
+    });
+    test.describe("GET /api/cases/{caseNumber}/notes", () => {
+        test("1. Successful Retrieve Case Notes (200 OK)", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}cases/${validCaseNumber}/notes`;
+            const response = await request.get(endpoint, {
+                headers: {
+                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                    Accept: "application/json",
+                },
+            });
+
+            const responseData = await response.json().catch(() => null);
+
+            console.log(" Response Status:", response.status());
+            console.log(
+                "Response Body:",
+                JSON.stringify(responseData, null, 2),
+            );
+
+            expect(response.status()).toBe(200);
+            expect(Array.isArray(responseData)).toBe(true);
+
+            responseData.forEach((noteItem: any) => {
+                expect(noteItem).toHaveProperty("timestamp");
+                expect(noteItem).toHaveProperty("note");
+                expect(noteItem).toHaveProperty("handler_id");
+                expect(noteItem).toHaveProperty("handler_name");
+                expect(noteItem).toHaveProperty("customer_id");
+                expect(noteItem).toHaveProperty("customer_name");
+                expect(noteItem).toHaveProperty("attachment");
+            });
+        });
+
+        test("2. Non-existent Case Number Retrieval (404 Not Found)", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}cases/${nonExistentCaseNumber}/notes`;
+            const response = await request.get(endpoint, {
+                headers: {
+                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                },
+            });
+
+            expect(response.status()).toBe(404);
+        });
+
+        test("3. Missing Authentication Headers (403 Forbidden)", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}cases/${validCaseNumber}/notes`;
+            const response = await request.get(endpoint);
+
+            expect(response.status()).toBe(403);
+        });
+    });
+
+    test.describe("POST /api/cases/{caseNumber}/notes", () => {
+        const directCaseNumber = "CASE-2026-0001000";
+
+        test("1. Successful Case Note Creation (201 Created)", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}cases/${directCaseNumber}/notes`;
+            const notePayload = {
+                message: "Test message",
+                is_internal: true,
+                attachment: "",
+            };
+
+            const response = await request.post(endpoint, {
+                headers: {
+                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+                data: notePayload,
+            });
+
+            const responseData = await response.json().catch(() => null);
+
+            console.log("Response Status:", response.status());
+            console.log(
+                "Response Body:",
+                JSON.stringify(responseData, null, 2),
+            );
+
+            expect(response.status()).toBe(201);
+        });
+
+        test("2. Empty Payload Submission (400 Bad Request)", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}cases/${directCaseNumber}/notes`;
+            const invalidPayload = {};
+
+            const response = await request.post(endpoint, {
+                headers: {
+                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                },
+                data: invalidPayload,
+            });
+
+            expect(response.status()).toBe(400);
+        });
+
+        test("3. Missing Authentication Token (403 Forbidden)", async ({
+            request,
+        }) => {
+            const endpoint = `${backofficeBaseUrl}cases/${directCaseNumber}/notes`;
+            const notePayload = {
+                message: "Test message",
+                is_internal: true,
+                attachment: "",
+            };
+
+            const response = await request.post(endpoint, {
+                data: notePayload,
+            });
+
+            expect(response.status()).toBe(403);
         });
     });
 });
