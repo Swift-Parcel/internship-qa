@@ -39,8 +39,8 @@ test.describe(" Back Office Case Notes Validation", () => {
 
         integrationHeaders = {
             "X-Api-Key": integrationSecretKey,
-            Authorization: authToken,
-        }; //we need that ones for access
+            Authorization: `Bearer ${authToken}`,
+        };
     });
 
     test.describe("GET /api/integration/cases/{caseNumber}/notes", () => {
@@ -138,19 +138,18 @@ test.describe(" Back Office Case Notes Validation", () => {
             const response = await request.post(endpoint, {
                 headers: {
                     "X-Api-Key": integrationSecretKey,
-                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                    Authorization: `Bearer ${authToken}`,
                 },
                 data: notePayload,
             });
 
-            //it is giving just id so we are reading like text
             const responseText = await response.text();
 
             console.log("Response Status:", response.status());
             console.log("Response Body (Created ID):", responseText);
 
             expect(response.status()).toBe(200);
-            expect(responseText).toBeTruthy(); // It is not null, there is an id returned
+            expect(responseText).toBeTruthy();
         });
         test("2. Should return 400 Bad Request when note payload is empty", async ({
             request,
@@ -208,8 +207,7 @@ test.describe(" Back Office Case Notes Validation", () => {
             const endpoint = `${backofficeBaseUrl}cases/${validCaseNumber}/notes`;
             const response = await request.get(endpoint, {
                 headers: {
-                    Authorization: authToken ? `Bearer ${authToken}` : "",
-                    Accept: "application/json",
+                    Authorization: `Bearer ${authToken}`,
                 },
             });
 
@@ -241,20 +239,18 @@ test.describe(" Back Office Case Notes Validation", () => {
             const endpoint = `${backofficeBaseUrl}cases/${nonExistentCaseNumber}/notes`;
             const response = await request.get(endpoint, {
                 headers: {
-                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                    Authorization: `Bearer ${authToken}`,
                 },
             });
 
             expect(response.status()).toBe(404);
         });
 
-        test("3. Missing Authentication Headers (403 Forbidden)", async ({
-            request,
-        }) => {
+        test("3. Missing Authentication Headers (401)", async ({ request }) => {
             const endpoint = `${backofficeBaseUrl}cases/${validCaseNumber}/notes`;
             const response = await request.get(endpoint);
 
-            expect(response.status()).toBe(403);
+            expect(response.status()).toBe(401);
         });
     });
 
@@ -273,9 +269,8 @@ test.describe(" Back Office Case Notes Validation", () => {
 
             const response = await request.post(endpoint, {
                 headers: {
-                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                    Authorization: `Bearer ${authToken}`,
                     "Content-Type": "application/json",
-                    Accept: "application/json",
                 },
                 data: notePayload,
             });
@@ -299,7 +294,7 @@ test.describe(" Back Office Case Notes Validation", () => {
 
             const response = await request.post(endpoint, {
                 headers: {
-                    Authorization: authToken ? `Bearer ${authToken}` : "",
+                    Authorization: `Bearer ${authToken}`,
                 },
                 data: invalidPayload,
             });
@@ -307,9 +302,7 @@ test.describe(" Back Office Case Notes Validation", () => {
             expect(response.status()).toBe(400);
         });
 
-        test("3. Missing Authentication Token (403 Forbidden)", async ({
-            request,
-        }) => {
+        test("3. Missing Authentication Token (401)", async ({ request }) => {
             const endpoint = `${backofficeBaseUrl}cases/${directCaseNumber}/notes`;
             const notePayload = {
                 message: "Test message",
@@ -321,7 +314,7 @@ test.describe(" Back Office Case Notes Validation", () => {
                 data: notePayload,
             });
 
-            expect(response.status()).toBe(403);
+            expect(response.status()).toBe(401);
         });
     });
 });
