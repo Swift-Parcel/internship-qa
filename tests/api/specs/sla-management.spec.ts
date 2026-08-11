@@ -188,7 +188,6 @@ test.describe("SLA management tests - positive", () => {
                         new Date(c.sla_deadline).getTime()
                 ) {
                     currentBreaches++;
-                    console.log("res not null ", c.case_number);
                 }
             }
         });
@@ -218,7 +217,6 @@ test.describe("SLA management tests - positive", () => {
                     new Date(c.sla_deadline).getTime()
                 ) {
                     historicalBreaches++;
-                    console.log("res null", c.case_number);
                 }
             }
         });
