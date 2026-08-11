@@ -189,13 +189,6 @@ test.describe("SLA management tests - positive", () => {
                 ) {
                     currentBreaches++;
                     console.log("res not null ", c.case_number);
-                } else if (
-                    c.resolved_date === null &&
-                    new Date(Date.now()).getTime() >
-                        new Date(c.sla_deadline).getTime()
-                ) {
-                    currentBreaches++;
-                    console.log("res null", c.case_number);
                 }
             }
         });
