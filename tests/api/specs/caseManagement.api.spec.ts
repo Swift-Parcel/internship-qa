@@ -133,7 +133,6 @@ test.describe("test backoffice case management suite", () => {
         const response = await api.get(`${apiBaseUrl}cases`);
         const bodyResponse = await response.json();
         expect(response.status()).toBe(200);
-        //expect the reponse to have a list of cases with the operator region only
     });
 
     test.describe("test backoffice case creation suite", () => {
@@ -171,7 +170,7 @@ test.describe("test backoffice case management suite", () => {
             const response = await api.post(`${apiBaseUrl}cases`, {
                 data: validRequest,
             });
-            console.log(validRequest.customer_email);
+
             const bodyResponse = await response.json();
             expect(response.status()).toBe(404);
             expect(bodyResponse.message).toBe(
@@ -190,7 +189,6 @@ test.describe("test backoffice case management suite", () => {
             const bodyResponse = await response.json();
             expect(response.status()).toBe(200);
             expect(bodyResponse.priority).toBe("HIGH");
-            //expect the case to have a priority of HIGH
         });
     });
 
@@ -207,7 +205,6 @@ test.describe("test backoffice case management suite", () => {
             );
             const bodyResponse = await response.json();
             expect(response.status()).toBe(200);
-            //assert the body returned
         });
 
         test("case should not be assigned to more than one handler and case reassignment ", async ({
@@ -238,7 +235,7 @@ test.describe("test backoffice case management suite", () => {
             apiBaseUrl,
         }) => {
             const case_number = "CASE-2026-0001009";
-            const handler_id = 999; // Assuming this handler ID does not exist
+            const handler_id = 999;
             const response = await api.post(
                 `${apiBaseUrl}cases/${case_number}/assign`,
                 {
@@ -273,17 +270,15 @@ test.describe("test backoffice case management suite", () => {
             expect(bodyResponse.message).toBe(
                 `Case with case number${case_number} is not found.`,
             );
-            //case assignment is only depart to depart IE LOST should be assigned to that department.
         });
     });
     test("case reassignment to a handler with maximum open cases ", async ({
         api,
         apiBaseUrl,
     }) => {
-        //test case reassignment to a handler with maximum open cases
         const case_number = "CASE-2026-0001017";
         const handler_id = "7"; // maximum open case 2
-        console.log(case_number);
+
         const response = await api.post(
             `${apiBaseUrl}cases/${case_number}/assign`,
             {
@@ -292,12 +287,9 @@ test.describe("test backoffice case management suite", () => {
                 },
             },
         );
-        console.log(response);
+
         const bodyResponse = await response.json();
         expect(response.status()).toBe(409);
-        /*expect(bodyResponse.message).toBe(
-            `Handler '${handler_id}' has reached maximum capacity (2).`,
-        );*/
     });
 });
 
@@ -310,7 +302,7 @@ test.describe("test case transition suite", () => {
         const case_number = "CASE-2026-0001017";
         const response = await api.post(
             `${apiBaseUrl}cases/${case_number}/change-status`,
-            // "http://localhost:3500/api/cases/CASE-2026-0001017/change-status",
+
             {
                 data: {
                     case_status: invalidTransiton,
@@ -318,7 +310,7 @@ test.describe("test case transition suite", () => {
             },
         );
         const bodyresponse = (await response).json;
-        console.log(bodyresponse);
+
         expect(response.status()).toBe(400);
         expect(validRequest.case_status).toBe("OPEN");
     });
@@ -352,7 +344,7 @@ test.describe("test case transition suite", () => {
                     },
                 );
                 const bodyResponse = await response.json();
-                console.log(bodyResponse);
+
                 expect(response.status()).toBe(200);
                 //expect(bodyResponse.message).toBe("status update");
             } finally {
@@ -369,7 +361,7 @@ test.describe("test case transition suite", () => {
                     },
                 );
                 const bodyResponse = await response.json();
-                console.log(bodyResponse);
+
                 expect(response.status()).toBe(200);
                 //expect(bodyResponse.message).toBe("status update");
             }
@@ -391,7 +383,7 @@ test.describe("test case transition suite", () => {
                         },
                     );
                     const bodyResponse = await response.json();
-                    console.log(bodyResponse);
+
                     expect(response.status()).toBe(400);
                     expect(bodyResponse.message).toBe("cant skip");
                 } finally {
@@ -405,7 +397,7 @@ test.describe("test case transition suite", () => {
                         },
                     );
                     const bodyResponse = await response.json();
-                    console.log(bodyResponse);
+
                     expect(response.status()).toBe(200);
                     expect(bodyResponse.message).toBe("okay");
                 }
@@ -422,7 +414,7 @@ test.describe("test case transition suite", () => {
             },
         );
         const bodyResponse = await response.json();
-        console.log(bodyResponse);
+
         expect(response.status()).toBe(400);
         expect(bodyResponse.message).toBe("cant update to start");
     });
