@@ -1,4 +1,5 @@
 import { test, expect } from "../setup/setupBackOffice";
+
 type caseCreation = {
     title: string;
     description: string;
@@ -307,15 +308,18 @@ test.describe("test case transition suite", () => {
     }) => {
         const invalidTransiton = "WRONG_STATUS";
         const case_number = "CASE-2026-0001017";
-        const response = api.put(
+        const response = await api.post(
             `${apiBaseUrl}cases/${case_number}/change-status`,
+            // "http://localhost:3500/api/cases/CASE-2026-0001017/change-status",
             {
                 data: {
                     case_status: invalidTransiton,
                 },
             },
         );
-        expect((await response).status).toBe(400);
+        const bodyresponse = (await response).json;
+        console.log(bodyresponse);
+        expect(response.status()).toBe(400);
         expect(validRequest.case_status).toBe("OPEN");
     });
 
