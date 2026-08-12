@@ -47,7 +47,7 @@ async function getBadSlaCalculationsByCaseType(
 ): Promise<string[]> {
     const responseBody = await response.json();
     let getCreatedCaseArray: Case[] = new Array();
-    responseBody.forEach((element: Case) => {
+    responseBody.items.forEach((element: Case) => {
         if (element.case_type === caseType) {
             getCreatedCaseArray.push(element);
         }
@@ -97,7 +97,7 @@ test.describe("SLA management tests - positive", () => {
             const getCaseResponse = await api.get(`${apiBaseUrl}cases`);
             const getCaseResponseBody = await getCaseResponse.json();
             let createdCase: Case;
-            getCaseResponseBody.forEach((c: Case) => {
+            getCaseResponseBody.items.forEach((c: Case) => {
                 if (c.case_number === createdCaseNumber) {
                     createdCase = c;
                 }
@@ -137,7 +137,7 @@ test.describe("SLA management tests - positive", () => {
             const getCaseResponse = await api.get(`${apiBaseUrl}cases`);
             const getCaseResponseBody = await getCaseResponse.json();
             let createdCase: Case;
-            getCaseResponseBody.forEach((c: Case) => {
+            getCaseResponseBody.items.forEach((c: Case) => {
                 if (c.case_number === createdCaseNumber) {
                     createdCase = c;
                 }
@@ -180,7 +180,7 @@ test.describe("SLA management tests - positive", () => {
         const casesResponse = await api.get(`${apiBaseUrl}cases`);
         const casesResponseBody = await casesResponse.json();
         let currentBreaches: number = 0;
-        casesResponseBody.forEach((c: Case) => {
+        casesResponseBody.items.forEach((c: Case) => {
             if (c.status !== "CLOSED") {
                 if (
                     c.resolved_date !== null &&
@@ -210,7 +210,7 @@ test.describe("SLA management tests - positive", () => {
         const casesResponse = await api.get(`${apiBaseUrl}cases`);
         const casesResponseBody = await casesResponse.json();
         let historicalBreaches: number = 0;
-        casesResponseBody.forEach((c: Case) => {
+        casesResponseBody.items.forEach((c: Case) => {
             if (c.status === "CLOSED") {
                 if (
                     new Date(Date.now()).getTime() >
