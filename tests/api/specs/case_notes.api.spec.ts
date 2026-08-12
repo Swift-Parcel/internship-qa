@@ -94,8 +94,6 @@ test.describe(" Back Office Case Notes Validation", () => {
 
             const responseData = await response.json().catch(() => null);
 
-            console.log("Response Status:", response.status());
-
             expect(response.status(), "Invalid case number format").toBe(404);
         });
 
@@ -144,9 +142,6 @@ test.describe(" Back Office Case Notes Validation", () => {
             });
 
             const responseText = await response.text();
-
-            console.log("Response Status:", response.status());
-            console.log("Response Body (Created ID):", responseText);
 
             expect(response.status()).toBe(200);
             expect(responseText).toBeTruthy();
@@ -213,12 +208,6 @@ test.describe(" Back Office Case Notes Validation", () => {
 
             const responseData = await response.json().catch(() => null);
 
-            console.log(" Response Status:", response.status());
-            console.log(
-                "Response Body:",
-                JSON.stringify(responseData, null, 2),
-            );
-
             expect(response.status()).toBe(200);
             expect(Array.isArray(responseData)).toBe(true);
 
@@ -276,12 +265,6 @@ test.describe(" Back Office Case Notes Validation", () => {
             });
 
             const responseData = await response.json().catch(() => null);
-
-            console.log("Response Status:", response.status());
-            console.log(
-                "Response Body:",
-                JSON.stringify(responseData, null, 2),
-            );
 
             expect(response.status()).toBe(201);
         });
