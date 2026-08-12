@@ -33,20 +33,22 @@ function statusCodeCheck(actualStatusCode: number, expectedStatusCode: number) {
         .toBe(expectedStatusCode);
 }
 
+let emailOne: string = `pricing${Date.now()}${process.env.API_USERNAME}`;
+let emailTwo: string = `pricingB${Date.now()}${process.env.API_USERNAME}`;
 let accessTokenOne: string;
 let accessTokenTwo: string;
 
 test.beforeAll(async ({ request }) => {
     await request.post(`${process.env.API_BASE_URL}customer`, {
         data: {
-            email: `pricing${process.env.API_USERNAME}`,
+            email: emailOne,
             full_name: "test trial",
             phone_number: "323232232",
             password: process.env.API_PASSWORD,
-            preferred_language: "PT",
+            preferred_language: "HU",
             default_address: {
                 city: "Budapest",
-                postal_code: "1037",
+                postal_code: "1051",
                 country_code: "HU",
                 street: "kunigunda utca",
                 street_number: "35",
@@ -58,7 +60,7 @@ test.beforeAll(async ({ request }) => {
         `${process.env.API_BASE_URL}auth/login`,
         {
             data: {
-                email: `pricing${process.env.API_USERNAME}`,
+                email: emailOne,
                 password: process.env.API_PASSWORD,
             },
         },
@@ -68,33 +70,20 @@ test.beforeAll(async ({ request }) => {
 
     await request.post(`${process.env.API_BASE_URL}customer`, {
         data: {
-            email: `pricing2${process.env.API_USERNAME}`,
+            email: emailTwo,
             full_name: "test trial",
             phone_number: "323232232",
             password: process.env.API_PASSWORD,
             preferred_language: "PL",
             default_address: {
-                city: "Warszawa",
-                postal_code: "10000",
+                city: "Kraków",
+                postal_code: "30001",
                 country_code: "PL",
                 street: "kunigunda ulica",
                 street_number: "27",
             },
         },
     });
-
-    const login2Response = await request.post(
-        `${process.env.API_BASE_URL}auth/login`,
-        {
-            data: {
-                email: `pricing2${process.env.API_USERNAME}`,
-                password: process.env.API_PASSWORD,
-            },
-        },
-    );
-
-    const login2ResponseBody = await login2Response.json();
-    accessTokenTwo = login2ResponseBody.access_token;
 });
 
 async function returnCustomerId(
@@ -103,7 +92,7 @@ async function returnCustomerId(
     token: string,
 ): Promise<number> {
     let id = 0;
-    for (let i = 4; i < 20; i++) {
+    for (let i = 4; i < 50; i++) {
         const profileResponse = await request.get(
             `${process.env.API_BASE_URL}customer/${i}`,
             {
@@ -135,14 +124,14 @@ test.beforeEach(async () => {
         senderAddress: {
             city: "Budapest",
             street: "A utca",
-            postal_code: "1111",
+            postal_code: "1051",
             country_code: "HU",
             street_number: "3",
         },
         recipientAddress: {
             city: "Budapest",
             street: "C utca",
-            postal_code: "1111",
+            postal_code: "1051",
             country_code: "HU",
             street_number: "5",
         },
@@ -159,7 +148,7 @@ test.describe("Pricing tests - positive", () => {
         { tag: "@smoke" },
         async ({ request }) => {
             const customerId = await returnCustomerId(
-                `pricing${process.env.API_USERNAME}`,
+                emailOne,
                 request,
                 accessTokenOne,
             );
@@ -167,14 +156,14 @@ test.describe("Pricing tests - positive", () => {
             ((pickupRequestDetails.senderAddress = {
                 city: "Budapest",
                 street: "A utca",
-                postal_code: "1111",
+                postal_code: "1051",
                 country_code: "HU",
                 street_number: "3",
             }),
                 (pickupRequestDetails.recipientAddress = {
-                    city: "Szeged",
+                    city: "Debrecen",
                     street: "B utca",
-                    postal_code: "6700",
+                    postal_code: "4024",
                     country_code: "HU",
                     street_number: "34",
                 }),
@@ -217,7 +206,7 @@ test.describe("Pricing tests - positive", () => {
         { tag: "@smoke" },
         async ({ request }) => {
             const customerId = await returnCustomerId(
-                `pricing${process.env.API_USERNAME}`,
+                emailOne,
                 request,
                 accessTokenOne,
             );
@@ -228,16 +217,16 @@ test.describe("Pricing tests - positive", () => {
             pickupRequestDetails.parcelHeight = 120;
             pickupRequestDetails.serviceType = 1;
             ((pickupRequestDetails.senderAddress = {
-                city: "Bratislava",
+                city: "Kraków",
                 street: "D ulica",
-                postal_code: "82100",
-                country_code: "SK",
+                postal_code: "30001",
+                country_code: "PL",
                 street_number: "1",
             }),
                 (pickupRequestDetails.recipientAddress = {
-                    city: "Szeged",
+                    city: "Debrecen",
                     street: "B utca",
-                    postal_code: "6700",
+                    postal_code: "4024",
                     country_code: "HU",
                     street_number: "34",
                 }),
@@ -280,7 +269,7 @@ test.describe("Pricing tests - positive", () => {
         { tag: "@smoke" },
         async ({ request }) => {
             const customerId = await returnCustomerId(
-                `pricing${process.env.API_USERNAME}`,
+                emailOne,
                 request,
                 accessTokenOne,
             );
@@ -329,7 +318,7 @@ test.describe("Pricing tests - positive", () => {
         { tag: "@smoke" },
         async ({ request }) => {
             const customerId = await returnCustomerId(
-                `pricing${process.env.API_USERNAME}`,
+                emailOne,
                 request,
                 accessTokenOne,
             );
@@ -337,9 +326,9 @@ test.describe("Pricing tests - positive", () => {
             pickupRequestDetails.serviceType = 2;
             pickupRequestDetails.parcelWeight = 5;
             ((pickupRequestDetails.senderAddress = {
-                city: "Szeged",
+                city: "Debrecen",
                 street: "B utca",
-                postal_code: "6700",
+                postal_code: "4024",
                 country_code: "HU",
                 street_number: "34",
             }),
@@ -388,24 +377,24 @@ test.describe("Pricing tests - positive", () => {
         request,
     }) => {
         const customerId = await returnCustomerId(
-            `pricing${process.env.API_USERNAME}`,
+            emailOne,
             request,
             accessTokenOne,
         );
 
         pickupRequestDetails.parcelWeight = 0.01;
         ((pickupRequestDetails.senderAddress = {
-            city: "Szeged",
+            city: "Debrecen",
             street: "B utca",
-            postal_code: "6700",
+            postal_code: "4024",
             country_code: "HU",
             street_number: "34",
         }),
             (pickupRequestDetails.recipientAddress = {
-                city: "Bratislava",
+                city: "Kraków",
                 street: "D ulica",
-                postal_code: "82100",
-                country_code: "SK",
+                postal_code: "30001",
+                country_code: "PL",
                 street_number: "1",
             }),
             await request.post(
@@ -443,10 +432,24 @@ test.describe("Pricing tests - positive", () => {
         request,
     }) => {
         const customerId = await returnCustomerId(
-            `pricing2${process.env.API_USERNAME}`,
+            emailTwo,
             request,
             accessTokenOne,
         );
+
+        const login2Response = await request.post(
+            `${process.env.API_BASE_URL}auth/login`,
+            {
+                data: {
+                    email: emailTwo,
+                    password: process.env.API_PASSWORD,
+                },
+            },
+        );
+
+        const login2ResponseBody = await login2Response.json();
+        accessTokenTwo = login2ResponseBody.access_token;
+
         pickupRequestDetails.serviceType = 1;
         pickupRequestDetails.parcelWeight = 10;
 
