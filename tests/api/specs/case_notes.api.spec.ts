@@ -54,12 +54,6 @@ test.describe(" Back Office Case Notes Validation", () => {
 
             const responseData = await response.json().catch(() => null);
 
-            console.log("Response Status:", response.status());
-            console.log(
-                "Response Body:",
-                JSON.stringify(responseData, null, 2),
-            );
-
             expect(response.status()).toBe(200);
             expect(Array.isArray(responseData)).toBe(true);
 
