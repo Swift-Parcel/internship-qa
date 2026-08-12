@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Customer Registration & Authentication API Tests", () => {
-    test.describe.configure({ mode: "serial" }); //we need that one for the tests to run in order, otherwise it is failing.
+    test.describe.configure({ mode: "serial" });
 
     const baseUrl = process.env.API_BASE_URL;
 
@@ -23,15 +23,24 @@ test.describe("Customer Registration & Authentication API Tests", () => {
         const response = await request.post(registerUrl, {
             data: {
                 email: uniqueEmail,
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: userPassword,
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             },
         });
 
         expect(response.status(), "Expected status code to be 200").toBe(200);
 
         const body = await response.json();
+
         expect(
             body,
             "Expected response body to have ID property",
@@ -40,10 +49,20 @@ test.describe("Customer Registration & Authentication API Tests", () => {
         expect(body.fullName, "Returned full name does not match").toBe(
             "QA Test User",
         );
+        expect(body.phoneNumber, "Returned phone number does not match").toBe(
+            "123456789",
+        );
+        expect(
+            body.preferredLanguage,
+            "Returned preferred language does not match",
+        ).toBe("EN");
+
+        expect(body).toHaveProperty("defaultAddress");
+        expect(body.defaultAddress.city).toBe("Test");
 
         expect(
             body,
-            "Security bug,Password field is exposed",
+            "Security bug, Password field is exposed",
         ).not.toHaveProperty("password");
     });
 
@@ -207,9 +226,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
             const existingEmail = `dup_qa_${Date.now()}@swiftparcel.com`;
             const payload = {
                 email: existingEmail,
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
 
             const firstReg = await request.post(registerUrl, { data: payload });
@@ -232,9 +259,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: "invalid-email-format",
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -245,9 +280,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
 
         test("1.3 - Should fail when email is missing", async ({ request }) => {
             const payload = {
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -261,9 +304,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: "",
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -276,11 +327,20 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
             request,
         }) => {
             const longEmail = `${"a".repeat(250)}@swiftparcel.com`;
+
             const payload = {
                 email: longEmail,
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -293,10 +353,18 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
             request,
         }) => {
             const payload = {
-                email: 123456,
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                email: 12132,
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -312,8 +380,16 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                phoneNumber: "123456789",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -327,10 +403,19 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "",
-                phoneNumber: "123456789",
+                full_name: "",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
+
             const response = await request.post(registerUrl, { data: payload });
             expect(
                 response.status(),
@@ -343,9 +428,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "A",
-                phoneNumber: "123456789",
+                full_name: "A",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -359,10 +452,19 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "A".repeat(256),
-                phoneNumber: "123456789",
+                full_name: "A".repeat(256),
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
+
             const response = await request.post(registerUrl, { data: payload });
             expect(
                 response.status(),
@@ -375,9 +477,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "<script>alert('xss')</script>",
-                phoneNumber: "123456789",
+                full_name: "<script>alert('xss')</script>",
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -391,10 +501,19 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: { firstName: "QA", lastName: "User" },
-                phoneNumber: "123456789",
+                full_name: { firstName: "QA", lastName: "User" },
+                phone_number: "123456789",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
+
             const response = await request.post(registerUrl, { data: payload });
             expect(
                 response.status(),
@@ -409,10 +528,19 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "QA Test User",
-                phoneNumber: "",
+                full_name: "QA Test User",
+                phone_number: "",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
+
             const response = await request.post(registerUrl, { data: payload });
             expect(
                 response.status(),
@@ -424,9 +552,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "QA Test User",
-                phoneNumber: "1",
+                full_name: "QA Test User",
+                phone_number: "1",
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -439,9 +575,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "QA Test User",
-                phoneNumber: "123456789012".repeat(256),
+                full_name: "QA Test User",
+                phone_number: "123456789012".repeat(256),
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -455,10 +599,19 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "QA Test User",
-                phoneNumber: true,
+                full_name: "QA Test User",
+                phone_number: true,
                 password: "Test1234!",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
+
             const response = await request.post(registerUrl, { data: payload });
             expect(
                 response.status(),
@@ -472,8 +625,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
+
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -487,9 +649,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: "12",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -503,9 +673,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: "",
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
@@ -519,9 +697,17 @@ test.describe("Customer Registration Negative Test Scenarios", () => {
         }) => {
             const payload = {
                 email: `test_qa_${Date.now()}@swiftparcel.com`,
-                fullName: "QA Test User",
-                phoneNumber: "123456789",
+                full_name: "QA Test User",
+                phone_number: "123456789",
                 password: ["Test1234!"],
+                preferred_language: "EN",
+                default_address: {
+                    city: "Test",
+                    street: "Testt",
+                    postal_code: "8200",
+                    country_code: "HU",
+                    street_number: "3",
+                },
             };
             const response = await request.post(registerUrl, { data: payload });
             expect(
