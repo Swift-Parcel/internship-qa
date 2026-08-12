@@ -21,28 +21,38 @@ type tag = {
     name: string;
 };
 type caseResponse = {
-    id: number;
-    case_number: string;
-    title: string;
-    description: string;
-    case_type: string;
-    status: string;
-    priority: string;
-    created_date: string;
-    updated_date: string | null;
-    is_escalated: boolean;
-    resolved_date: string | null;
-    sla_deadline: string;
-    channel: string;
-    resolution: string;
-    satisfaction_score: number | null;
-    customer_id: number;
-    customer_name: string;
-    handler_id: number;
-    handler_name: string;
-    region_id: number;
-    region_name: string;
-    tags: tag[];
+    items: [
+        {
+            id: number;
+            case_number: string;
+            title: string;
+            description: string;
+            case_type: string;
+            status: string;
+            priority: string;
+            created_date: string;
+            updated_date: string | null;
+            is_escalated: boolean;
+            resolved_date: string | null;
+            sla_deadline: string;
+            channel: string;
+            resolution: string;
+            satisfaction_score: number | null;
+            customer_id: number;
+            customer_name: string;
+            handler_id: number;
+            handler_name: string;
+            region_id: number;
+            region_name: string;
+            tags: tag[];
+        },
+    ];
+    page_number: number;
+    page_size: number;
+    total_count: number;
+    total_pages: 1;
+    has_previous_page: boolean;
+    has_next_page: boolean;
 };
 
 let createCase: caseCreation = {
@@ -101,7 +111,7 @@ test.describe("testing role permissions for readonly", () => {
             const ViewCaseresponse = await readonlyApi.get(
                 `${apiBaseUrl}cases`,
             );
-            expect(ViewCaseresponse.status()).toBe(403);
+            expect(ViewCaseresponse.status()).toBe(200);
             //should be 200
 
             const CreateCaseresponse = await readonlyApi.post(
@@ -171,10 +181,10 @@ test.describe("test role permission for operator", () => {
                 `${apiBaseUrl}cases`,
             );
             expect(ViewCaseresponse.status()).toBe(200);
-            const ViewCaseBodyResponse: caseResponse[] =
+            const ViewCaseBodyResponse: caseResponse =
                 await ViewCaseresponse.json();
 
-            ViewCaseBodyResponse.forEach((element) => {
+            ViewCaseBodyResponse.items.forEach((element) => {
                 expect(element.region_id).toBe(1);
             });
 
@@ -188,7 +198,8 @@ test.describe("test role permission for operator", () => {
             expect(CreateCaseresponse.status()).toBe(200);
 
             const casenumber = responsebody.case_number;
-            const EditCaseresponse = await operatorApi.put(
+
+            const EditCaseresponse = await operatorApi.post(
                 `${apiBaseUrl}cases/${casenumber}/change-status`,
                 {
                     data: {
@@ -246,10 +257,10 @@ test.describe("test role permission for supervisor", () => {
                 `${apiBaseUrl}cases`,
             );
             expect(ViewCaseresponse.status()).toBe(200);
-            const ViewCaseBodyResponse: caseResponse[] =
+            const ViewCaseBodyResponse: caseResponse =
                 await ViewCaseresponse.json();
 
-            ViewCaseBodyResponse.forEach((element) => {
+            ViewCaseBodyResponse.items.forEach((element) => {
                 expect(element.region_id).toEqual(expect.any(Number));
             });
 
@@ -263,7 +274,7 @@ test.describe("test role permission for supervisor", () => {
             expect(CreateCaseresponse.status()).toBe(200);
 
             const casenumber = responsebody.case_number;
-            const EditCaseresponse = await supervisorApi.put(
+            const EditCaseresponse = await supervisorApi.post(
                 `${apiBaseUrl}cases/${casenumber}/change-status`,
                 {
                     data: {
@@ -315,10 +326,10 @@ test.describe("test role permission for admin", () => {
 
             const ViewCaseresponse = await adminApi.get(`${apiBaseUrl}cases`);
             expect(ViewCaseresponse.status()).toBe(200);
-            const ViewCaseBodyResponse: caseResponse[] =
+            const ViewCaseBodyResponse: caseResponse =
                 await ViewCaseresponse.json();
 
-            ViewCaseBodyResponse.forEach((element) => {
+            ViewCaseBodyResponse.items.forEach((element) => {
                 expect(element.region_id).toEqual(expect.any(Number));
             });
 
@@ -332,7 +343,7 @@ test.describe("test role permission for admin", () => {
             expect(CreateCaseresponse.status()).toBe(200);
 
             const casenumber = responsebody.case_number;
-            const EditCaseresponse = await adminApi.put(
+            const EditCaseresponse = await adminApi.post(
                 `${apiBaseUrl}cases/${casenumber}/change-status`,
                 {
                     data: {
