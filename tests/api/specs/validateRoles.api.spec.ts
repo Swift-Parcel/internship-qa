@@ -1,4 +1,3 @@
-import { get } from "node:http";
 import { getBearerToken } from "../../../api/helpers/auth";
 import { test, expect } from "../setup/setupBackOffice";
 import { request as playwrightRequest } from "@playwright/test";
@@ -61,12 +60,7 @@ let createCase: caseCreation = {
 };
 
 test.describe("testing role permissions for readonly", () => {
-    //readonly should only view cases
-    //cannot create a case
-    //cannot edit case
-    //cannot view reports
     test("testing accessing reports ", async ({ apiBaseUrl }) => {
-        //create new api request with different username token
         const requestContext = await playwrightRequest.newContext();
 
         try {
@@ -98,6 +92,7 @@ test.describe("testing role permissions for readonly", () => {
                 request: requestContext,
                 bearerToken,
             });
+
             const Reportresponse = await readonlyApi.get(
                 `${apiBaseUrl}reports/sla-breaches`,
             );
@@ -135,12 +130,7 @@ test.describe("testing role permissions for readonly", () => {
 });
 
 test.describe("test role permission for operator", () => {
-    //operator should only view cases from the region 1
-    //can create a case
-    //can edit case only in region 1
-    //can view all reports
     test("testing accessing reports ", async ({ apiBaseUrl }) => {
-        //create new api request with different username token
         const requestContext = await playwrightRequest.newContext();
 
         try {
@@ -215,12 +205,7 @@ test.describe("test role permission for operator", () => {
 });
 
 test.describe("test role permission for supervisor", () => {
-    //should  view cases from all regions
-    //can create a case
-    //can edit case in any region
-    //can view all reports
     test("testing accessing reports ", async ({ apiBaseUrl }) => {
-        //create new api request with different username token
         const requestContext = await playwrightRequest.newContext();
 
         try {
@@ -295,12 +280,7 @@ test.describe("test role permission for supervisor", () => {
 });
 
 test.describe("test role permission for admin", () => {
-    //should  view cases from all regions
-    //can create a case
-    //can edit case in any region
-    //can view all reports
     test("testing accessing reports ", async ({ apiBaseUrl }) => {
-        //create new api request with different username token
         const requestContext = await playwrightRequest.newContext();
 
         try {
@@ -367,5 +347,3 @@ test.describe("test role permission for admin", () => {
         }
     });
 });
-
-//operator should only view reports from the region 1
