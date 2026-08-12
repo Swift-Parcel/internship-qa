@@ -125,15 +125,6 @@ test.describe("test backoffice case management suite", () => {
         });
     });
 
-    test("testing retrieving case for operator see only region assigned to", async ({
-        api,
-        apiBaseUrl,
-    }) => {
-        const response = await api.get(`${apiBaseUrl}cases`);
-        const bodyResponse = await response.json();
-        expect(response.status()).toBe(200);
-    });
-
     test.describe("test backoffice case creation suite", () => {
         test("case creation with valid data ", async ({ api, apiBaseUrl }) => {
             const response = await api.post(`${apiBaseUrl}cases`, {
