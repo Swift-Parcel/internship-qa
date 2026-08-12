@@ -82,16 +82,15 @@ test.describe("test backoffice case management suite", () => {
                 status: expect.any(String),
                 priority: expect.any(String),
                 created_date: expect.any(String),
-                //updated_date: expect.any(String),
+
                 is_escalated: expect.any(Boolean),
-                //resolved_date: expect.any(String),
+
                 sla_deadline: expect.any(String),
                 channel: expect.any(String),
-                //resolution: expect.anything,
+
                 customer_id: expect.any(Number),
                 customer_name: expect.any(String),
-                //handler_id: expect.any(Number),
-                // handler_name: expect.any(String),
+
                 region_id: expect.any(Number),
                 region_name: expect.any(String),
                 tags: expect.any(Array),
@@ -277,7 +276,7 @@ test.describe("test backoffice case management suite", () => {
         apiBaseUrl,
     }) => {
         const case_number = "CASE-2026-0001017";
-        const handler_id = "7"; // maximum open case 2
+        const handler_id = "7";
 
         const response = await api.post(
             `${apiBaseUrl}cases/${case_number}/assign`,
@@ -334,7 +333,6 @@ test.describe("test case transition suite", () => {
             let prevStatus = ValidTransition[i];
 
             try {
-                // Immediate next status is valid
                 const response = await api.post(
                     `${apiBaseUrl}cases/${case_number}/change-status`,
                     {
@@ -346,12 +344,11 @@ test.describe("test case transition suite", () => {
                 const bodyResponse = await response.json();
 
                 expect(response.status()).toBe(200);
-                //expect(bodyResponse.message).toBe("status update");
             } finally {
                 if (prevStatus == "AWAITING_CUSTOMER") {
                     prevStatus = ValidTransition[i - 1];
                 }
-                // test reverting backwards to prev
+
                 const response = await api.post(
                     `${apiBaseUrl}cases/${case_number}/change-status`,
                     {
@@ -363,11 +360,8 @@ test.describe("test case transition suite", () => {
                 const bodyResponse = await response.json();
 
                 expect(response.status()).toBe(200);
-                //expect(bodyResponse.message).toBe("status update");
             }
 
-            // The status after the next one should not be allowed
-            //can skip awaiting customer
             if (
                 i + 1 < ValidTransition.length &&
                 ValidTransition[i + 1] !== "AWAITING_CUSTOMER"
@@ -403,7 +397,7 @@ test.describe("test case transition suite", () => {
                 }
             }
         }
-        //test from close back to open
+
         const firstStatus = "OPEN";
         const response = await api.post(
             `${apiBaseUrl}cases/${case_number}/change-status`,
