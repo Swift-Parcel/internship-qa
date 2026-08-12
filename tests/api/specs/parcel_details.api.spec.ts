@@ -45,9 +45,6 @@ test.describe("Back-Office Parcel Details", () => {
 
             const responseData = await response.json().catch(() => null);
 
-            console.log("Status Code:", response.status());
-            console.log("Body:", JSON.stringify(responseData, null, 2));
-
             expect(response.status()).toBe(200);
             expect(responseData).toBeDefined();
 
@@ -92,9 +89,6 @@ test.describe("Back-Office Parcel Details", () => {
             });
 
             const responseData = await response.json().catch(() => null);
-
-            console.log("Status Code:", response.status());
-            console.log("Body:", JSON.stringify(responseData, null, 2));
 
             expect(response.status()).toBe(200);
             expect(responseData).toBeDefined();
