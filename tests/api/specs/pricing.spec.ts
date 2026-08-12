@@ -40,9 +40,17 @@ test.beforeAll(async ({ request }) => {
     await request.post(`${process.env.API_BASE_URL}customer`, {
         data: {
             email: `pricing${process.env.API_USERNAME}`,
-            fullName: "test trial",
-            phoneNumber: "323232232",
+            full_name: "test trial",
+            phone_number: "323232232",
             password: process.env.API_PASSWORD,
+            preferred_language: "PT",
+            default_address: {
+                city: "Budapest",
+                postal_code: "1037",
+                country_code: "HU",
+                street: "kunigunda utca",
+                street_number: "35",
+            },
         },
     });
 
@@ -61,9 +69,17 @@ test.beforeAll(async ({ request }) => {
     await request.post(`${process.env.API_BASE_URL}customer`, {
         data: {
             email: `pricing2${process.env.API_USERNAME}`,
-            fullName: "test trial",
-            phoneNumber: "323232232",
+            full_name: "test trial",
+            phone_number: "323232232",
             password: process.env.API_PASSWORD,
+            preferred_language: "PL",
+            default_address: {
+                city: "Warszawa",
+                postal_code: "10000",
+                country_code: "PL",
+                street: "kunigunda ulica",
+                street_number: "27",
+            },
         },
     });
 
